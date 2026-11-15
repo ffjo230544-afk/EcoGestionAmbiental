@@ -1,0 +1,6 @@
+Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:app|config|database|docs|routes|storage)(?:/|$) - [F,NC,L]
+    RewriteRule ^(?:README\.md|\.gitignore)$ - [F,NC,L]
+</IfModule>

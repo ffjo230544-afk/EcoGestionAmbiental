@@ -1,0 +1,28 @@
+# Dependencias que se reconstruyen con Composer.
+/vendor/
+
+# Configuración privada del correo.
+/config/mail.local.php
+
+# Variables locales y credenciales.
+.env
+.env.*
+!.env.example
+
+# Archivos generados durante el uso del sistema.
+/storage/*.log
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/temp/*
+!/storage/temp/.gitkeep
+/storage/rate_limits/*
+!/storage/rate_limits/.gitkeep
+
+# Respaldos comprimidos que no forman parte del código.
+*.zip
+
+# Configuración de editores y archivos del sistema operativo.
+/.idea/
+/.vscode/
+Thumbs.db
+.DS_Store
