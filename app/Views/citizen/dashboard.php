@@ -18,28 +18,43 @@
     </div>
 </section>
 
+
+
+
+
 <?php
-/* Estos indicadores permanecerán en cero hasta conectar los datos personales. */
+/*
+ | Aquí presento los servicios disponibles
+ | y la actividad del ciudadano autenticado.
+ */
 $metrics = [
     [
         'label' => 'Centros disponibles',
-        'value' => '0',
+        'value' =>
+            $summary['centros_disponibles'],
         'icon' => 'bi-geo-alt-fill',
+        'meta' => 'Centros activos',
     ],
     [
         'label' => 'Mis cotizaciones',
-        'value' => '0',
+        'value' =>
+            $summary['cotizaciones_usuario'],
         'icon' => 'bi-cash-stack',
+        'meta' => 'Registros realizados',
     ],
     [
-        'label' => 'Mis citas',
-        'value' => '0',
+        'label' => 'Mis citas próximas',
+        'value' =>
+            $summary['citas_usuario'],
         'icon' => 'bi-calendar2-check-fill',
+        'meta' => 'Pendientes o confirmadas',
     ],
     [
         'label' => 'Puntos ambientales',
-        'value' => '0',
+        'value' =>
+            $summary['puntos_ambientales'],
         'icon' => 'bi-stars',
+        'meta' => 'Acumulados en actividades',
     ],
 ];
 ?>
@@ -48,31 +63,44 @@ $metrics = [
 
     <?php foreach ($metrics as $metric): ?>
 
-    <div class="col-6 col-xl-3">
-        <article class="eco-card metric-card">
+        <div class="col-6 col-xl-3">
+            <article class="eco-card metric-card">
 
-            <div class="metric-icon">
-                <i class="bi <?= e($metric['icon']) ?>"></i>
-            </div>
+                <div class="metric-icon">
+                    <i class="bi <?= e(
+                        $metric['icon']
+                    ) ?>"></i>
+                </div>
 
-            <div class="metric-value">
-                <?= e($metric['value']) ?>
-            </div>
+                <div class="metric-value">
+                    <?= e($metric['value']) ?>
+                </div>
 
-            <div class="metric-label">
-                <?= e($metric['label']) ?>
-            </div>
+                <div class="metric-label">
+                    <?= e($metric['label']) ?>
+                </div>
 
-            <div class="metric-meta">
-                Información pendiente de conexión
-            </div>
+                <div class="metric-meta">
+                    <?= e($metric['meta']) ?>
+                </div>
 
-        </article>
-    </div>
+            </article>
+        </div>
 
     <?php endforeach; ?>
 
 </div>
+
+
+
+
+
+
+
+
+
+
+
 
 <!-- Aquí destaco las acciones principales que realizará el ciudadano. -->
 <div class="row g-3 mb-4">
@@ -93,9 +121,10 @@ $metrics = [
                 por kilogramo o pieza.
             </p>
 
-            <a class="btn btn-eco" href="#modulo-cotizador">
-                Ver cotizador
-            </a>
+         <a
+                class="btn btn-eco"
+                href="<?= e(url('cotizador')) ?>"
+            >
         </article>
     </div>
 
@@ -115,9 +144,10 @@ $metrics = [
                 y un horario disponible.
             </p>
 
-            <a class="btn btn-eco" href="#modulo-solicitar-cita">
-                Agendar visita
-            </a>
+           <a
+                class="btn btn-eco"
+                href="<?= e(url('citas/crear')) ?>"
+            >
         </article>
     </div>
 
@@ -137,9 +167,10 @@ $metrics = [
                 y materiales aceptados.
             </p>
 
-            <a class="btn btn-eco" href="#modulo-mapa">
-                Consultar mapa
-            </a>
+          <a
+                class="btn btn-eco"
+                href="<?= e(url('mapa')) ?>"
+            >
         </article>
     </div>
 </div>

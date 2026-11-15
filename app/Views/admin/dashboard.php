@@ -21,41 +21,50 @@
     </div>
 </section>
 
+
+
+
+
 <?php
 /*
- | Estos indicadores son únicamente de ejemplo.
- | Posteriormente sus números vendrán de la base de datos.
+ | Aquí preparo los indicadores utilizando
+ | la información consultada en MySQL.
  */
 $metrics = [
     [
         'Usuarios activos',
-        '0',
+        $summary['usuarios_activos'],
         'bi-people-fill',
+        'Cuentas habilitadas',
     ],
     [
         'Centros registrados',
-        '0',
+        $summary['centros_registrados'],
         'bi-geo-alt-fill',
+        'Registrados en el sistema',
     ],
     [
         'Cotizaciones pendientes',
-        '0',
+        $summary['cotizaciones_pendientes'],
         'bi-cash-coin',
+        'Requieren revisión',
     ],
     [
         'Citas programadas',
-        '0',
+        $summary['citas_programadas'],
         'bi-calendar2-check-fill',
+        'Pendientes o confirmadas',
     ],
 ];
 ?>
 
 <div class="row g-3 mb-4">
 
-    <?php foreach ($metrics as [$label, $value, $icon]): ?>
+    <?php foreach (
+        $metrics as [$label, $value, $icon, $meta]
+    ): ?>
 
         <div class="col-6 col-xl-3">
-
             <article class="eco-card metric-card">
 
                 <div class="metric-icon">
@@ -71,7 +80,7 @@ $metrics = [
                 </div>
 
                 <div class="metric-meta">
-                    Se conectará posteriormente
+                    <?= e($meta) ?>
                 </div>
 
             </article>
@@ -80,6 +89,15 @@ $metrics = [
     <?php endforeach; ?>
 
 </div>
+
+
+
+
+
+
+
+
+
 
 <div class="page-header">
 

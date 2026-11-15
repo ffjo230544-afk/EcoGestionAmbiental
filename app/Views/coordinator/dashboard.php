@@ -21,41 +21,48 @@
     </div>
 </section>
 
+
+
 <?php
 /*
- | Estos valores son visuales hasta que conecte
- | las consultas de la base de datos.
+ | Estos indicadores respetan el centro
+ | asignado al coordinador autenticado.
  */
 $metrics = [
     [
-        'Centros activos',
-        '0',
+        'Centro activo',
+        $summary['centros_activos'],
         'bi-geo-alt-fill',
+        $assignedCenterName,
     ],
     [
         'Cotizaciones pendientes',
-        '0',
+        $summary['cotizaciones_pendientes'],
         'bi-cash-coin',
+        'Únicamente de mi centro',
     ],
     [
         'Citas del día',
-        '0',
+        $summary['citas_del_dia'],
         'bi-calendar2-check-fill',
+        'Pendientes o confirmadas',
     ],
     [
         'Encuestas publicadas',
-        '0',
+        $summary['encuestas_publicadas'],
         'bi-ui-checks-grid',
+        'Disponibles para responder',
     ],
 ];
 ?>
 
 <div class="row g-3 mb-4">
 
-    <?php foreach ($metrics as [$label, $value, $icon]): ?>
+    <?php foreach (
+        $metrics as [$label, $value, $icon, $meta]
+    ): ?>
 
         <div class="col-6 col-xl-3">
-
             <article class="eco-card metric-card">
 
                 <div class="metric-icon">
@@ -71,7 +78,7 @@ $metrics = [
                 </div>
 
                 <div class="metric-meta">
-                    Datos pendientes de conexión
+                    <?= e($meta) ?>
                 </div>
 
             </article>
@@ -80,6 +87,10 @@ $metrics = [
     <?php endforeach; ?>
 
 </div>
+
+
+
+
 
 <div class="page-header">
 
