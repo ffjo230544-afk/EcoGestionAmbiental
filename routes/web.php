@@ -1,0 +1,965 @@
+<?php
+declare(strict_types=1);
+
+/*
+ | Aquí defino grupos de roles para reutilizarlos
+ | en las rutas protegidas.
+ */
+$everyone = [
+    'admin',
+    'coordinador',
+    'ciudadano',
+];
+$operations = [
+    'admin',
+    'coordinador',
+];
+
+/* Rutas públicas. */
+$router->get(
+    '',
+    'InicioController',
+    'index'
+);
+
+$router->get(
+    'login',
+    'AuthController',
+    'login'
+);
+
+$router->post(
+    'login',
+    'AuthController',
+    'authenticate'
+);
+
+/* El cierre requiere una sesión de cualquier rol. */
+$router->post(
+    'logout',
+    'AuthController',
+    'logout',
+    $everyone
+);
+
+/*  ADMIN   */
+
+/* Ruta exclusiva del administrador. */
+$router->get(
+    'administrador',
+    'AdministradorController',
+    'index',
+    ['admin']
+);
+
+/* Gestión de usuarios: exclusiva del administrador. */
+$router->get(
+    'usuarios',
+    'UsuarioController',
+    'index',
+    ['admin']
+);
+
+$router->get(
+    'usuarios/crear',
+    'UsuarioController',
+    'create',
+    ['admin']
+);
+
+$router->post(
+    'usuarios/guardar',
+    'UsuarioController',
+    'store',
+    ['admin']
+);
+
+$router->get(
+    'usuarios/editar',
+    'UsuarioController',
+    'edit',
+    ['admin']
+);
+
+$router->post(
+    'usuarios/actualizar',
+    'UsuarioController',
+    'update',
+    ['admin']
+);
+
+$router->post(
+    'usuarios/cambiar-estado',
+    'UsuarioController',
+    'changeStatus',
+    ['admin']
+);
+
+
+
+
+
+/* Ruta exclusiva del coordinador. */
+$router->get(
+    'coordinador',
+    'CoordinadorController',
+    'index',
+    ['coordinador']
+);
+
+/* Ruta exclusiva del ciudadano. */
+$router->get(
+    'ciudadano',
+    'CiudadanoController',
+    'index',
+    ['ciudadano']
+);
+
+
+/* CENTROS DE ACOPIO */
+
+$centerEditors = [
+    'admin',
+    'coordinador',
+];
+
+/* Consulta para todos los usuarios autenticados. */
+$router->get(
+    'centros',
+    'CentroController',
+    'index',
+    $everyone
+);
+
+$router->get(
+    'centros/detalle',
+    'CentroController',
+    'show',
+    $everyone
+);
+
+/* Creación exclusiva del administrador. */
+$router->get(
+    'centros/crear',
+    'CentroController',
+    'create',
+    ['admin']
+);
+
+$router->post(
+    'centros/guardar',
+    'CentroController',
+    'store',
+    ['admin']
+);
+
+/*
+ | El coordinador puede editar únicamente el suyo.
+ | El controlador comprueba el identificador.
+ */
+$router->get(
+    'centros/editar',
+    'CentroController',
+    'edit',
+    $centerEditors
+);
+
+$router->post(
+    'centros/actualizar',
+    'CentroController',
+    'update',
+    $centerEditors
+);
+
+/* Activación exclusiva del administrador. */
+$router->post(
+    'centros/cambiar-estado',
+    'CentroController',
+    'changeStatus',
+    ['admin']
+);
+
+/* Materiales del centro asignado. */
+$router->get(
+    'centros/materiales',
+    'CentroController',
+    'materials',
+    $centerEditors
+);
+
+$router->post(
+    'centros/materiales/actualizar',
+    'CentroController',
+    'updateMaterials',
+    $centerEditors
+);
+
+/* ==========================================================
+   Recuperación de contraseña
+   ========================================================== */
+
+$router->get(
+    'recuperar-password',
+    'RecuperacionController',
+    'form'
+);
+
+$router->post(
+    'recuperar-password/enviar',
+    'RecuperacionController',
+    'send'
+);
+
+$router->get(
+    'restablecer-password',
+    'RecuperacionController',
+    'reset'
+);
+
+$router->post(
+    'restablecer-password/guardar',
+    'RecuperacionController',
+    'update'
+);
+
+
+
+
+/* CATEGORÍAS DE RESIDUOS */
+
+/* Consulta para todos los usuarios autenticados. */
+$router->get(
+    'categorias',
+    'CategoriaController',
+    'index',
+    $everyone
+);
+
+/* Gestión global exclusiva del administrador. */
+$router->get(
+    'categorias/crear',
+    'CategoriaController',
+    'create',
+    ['admin']
+);
+
+$router->post(
+    'categorias/guardar',
+    'CategoriaController',
+    'store',
+    ['admin']
+);
+
+$router->get(
+    'categorias/editar',
+    'CategoriaController',
+    'edit',
+    ['admin']
+);
+
+$router->post(
+    'categorias/actualizar',
+    'CategoriaController',
+    'update',
+    ['admin']
+);
+
+$router->post(
+    'categorias/cambiar-estado',
+    'CategoriaController',
+    'changeStatus',
+    ['admin']
+);
+
+
+
+/*    HORARIOS    */
+$scheduleManagers = [
+    'admin',
+    'coordinador',
+];
+
+/* Consulta para los tres roles. */
+$router->get(
+    'horarios',
+    'HorarioController',
+    'index',
+    $everyone
+);
+
+/* Modificación exclusiva de responsables. */
+$router->get(
+    'horarios/editar',
+    'HorarioController',
+    'edit',
+    $scheduleManagers
+);
+
+$router->post(
+    'horarios/actualizar',
+    'HorarioController',
+    'update',
+    $scheduleManagers
+);
+
+/* ==========================================================
+   Mapa interactivo de centros de acopio
+   ========================================================== */
+
+$router->get(
+    'mapa',
+    'MapaController',
+    'index',
+    $everyone
+);
+
+
+
+
+
+
+/* ==========================================================
+   Base de conocimiento ambiental
+   ========================================================== */
+
+/* Consulta para los tres roles. */
+$router->get(
+    'educacion',
+    'EducacionController',
+    'index',
+    $everyone
+);
+
+$router->get(
+    'educacion/detalle',
+    'EducacionController',
+    'show',
+    $everyone
+);
+
+/* Administración: administrador y coordinador. */
+$router->get(
+    'educacion/crear',
+    'PublicacionController',
+    'create',
+    $operations
+);
+
+$router->post(
+    'educacion/guardar',
+    'PublicacionController',
+    'store',
+    $operations
+);
+
+$router->get(
+    'educacion/editar',
+    'PublicacionController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'educacion/actualizar',
+    'PublicacionController',
+    'update',
+    $operations
+);
+
+$router->post(
+    'educacion/desactivar',
+    'PublicacionController',
+    'deactivate',
+    $operations
+);
+
+
+
+/*
+ | Noticias, avisos, campañas y eventos.
+ | Los tres roles pueden consultar publicaciones.
+ */
+$router->get(
+    'noticias',
+    'NoticiaController',
+    'index',
+    $everyone
+);
+
+$router->get(
+    'noticias/detalle',
+    'NoticiaController',
+    'show',
+    $everyone
+);
+
+/*
+ | Solamente administrador y coordinador
+ | pueden administrar contenido.
+ */
+$router->get(
+    'noticias/crear',
+    'NoticiaController',
+    'create',
+    [
+        'admin',
+        'coordinador',
+    ]
+);
+
+$router->post(
+    'noticias/guardar',
+    'NoticiaController',
+    'store',
+    [
+        'admin',
+        'coordinador',
+    ]
+);
+
+$router->get(
+    'noticias/editar',
+    'NoticiaController',
+    'edit',
+    [
+        'admin',
+        'coordinador',
+    ]
+);
+
+$router->post(
+    'noticias/actualizar',
+    'NoticiaController',
+    'update',
+    [
+        'admin',
+        'coordinador',
+    ]
+);
+
+$router->post(
+    'noticias/desactivar',
+    'NoticiaController',
+    'deactivate',
+    [
+        'admin',
+        'coordinador',
+    ]
+);
+
+
+
+/* ==========================================================
+   Encuestas ambientales
+   ========================================================== */
+
+/* Los tres roles pueden consultar y responder. */
+$router->get(
+    'encuestas',
+    'EncuestaController',
+    'index',
+    $everyone
+);
+
+$router->get(
+    'encuestas/responder',
+    'EncuestaController',
+    'respond',
+    $everyone
+);
+
+$router->post(
+    'encuestas/enviar',
+    'EncuestaController',
+    'submit',
+    $everyone
+);
+
+/* Administración para administrador y coordinador. */
+$router->get(
+    'encuestas/crear',
+    'EncuestaController',
+    'create',
+    $operations
+);
+
+$router->post(
+    'encuestas/guardar',
+    'EncuestaController',
+    'store',
+    $operations
+);
+
+$router->get(
+    'encuestas/editar',
+    'EncuestaController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'encuestas/actualizar',
+    'EncuestaController',
+    'update',
+    $operations
+);
+
+$router->get(
+    'encuestas/preguntas',
+    'EncuestaController',
+    'questions',
+    $operations
+);
+
+$router->get(
+    'encuestas/preguntas/crear',
+    'EncuestaController',
+    'createQuestion',
+    $operations
+);
+
+$router->post(
+    'encuestas/preguntas/guardar',
+    'EncuestaController',
+    'storeQuestion',
+    $operations
+);
+
+$router->get(
+    'encuestas/preguntas/editar',
+    'EncuestaController',
+    'editQuestion',
+    $operations
+);
+
+$router->post(
+    'encuestas/preguntas/actualizar',
+    'EncuestaController',
+    'updateQuestion',
+    $operations
+);
+
+$router->post(
+    'encuestas/preguntas/cambiar-estado',
+    'EncuestaController',
+    'changeQuestionStatus',
+    $operations
+);
+
+$router->get(
+    'encuestas/resultados',
+    'EncuestaController',
+    'results',
+    $operations
+);
+
+
+
+/* ==========================================================
+   Tarifas de cotización
+   ========================================================== */
+
+/*
+ | Solamente el administrador y el coordinador
+ | pueden administrar los precios.
+ */
+$router->get(
+    'tarifas',
+    'TarifaController',
+    'index',
+    $operations
+);
+
+$router->get(
+    'tarifas/crear',
+    'TarifaController',
+    'create',
+    $operations
+);
+
+$router->post(
+    'tarifas/guardar',
+    'TarifaController',
+    'store',
+    $operations
+);
+
+$router->get(
+    'tarifas/editar',
+    'TarifaController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'tarifas/actualizar',
+    'TarifaController',
+    'update',
+    $operations
+);
+
+$router->post(
+    'tarifas/cambiar-estado',
+    'TarifaController',
+    'changeStatus',
+    $operations
+);
+
+/* ==========================================================
+   Cotizador y gestión de cotizaciones
+   ========================================================== */
+
+/* Cotizador exclusivo del ciudadano. */
+$router->get(
+    'cotizador',
+    'CotizacionController',
+    'create',
+    ['ciudadano']
+);
+
+$router->post(
+    'cotizaciones/guardar',
+    'CotizacionController',
+    'store',
+    ['ciudadano']
+);
+
+/*
+ | Los tres roles pueden abrir la ruta,
+ | pero el controlador limita los resultados.
+ */
+$router->get(
+    'cotizaciones',
+    'CotizacionController',
+    'index',
+    $everyone
+);
+
+/* Administración de estados. */
+$router->post(
+    'cotizaciones/cambiar-estado',
+    'CotizacionController',
+    'changeStatus',
+    $operations
+);
+
+/* Cancelación exclusiva del propietario. */
+$router->post(
+    'cotizaciones/cancelar',
+    'CotizacionController',
+    'cancel',
+    ['ciudadano']
+);
+
+
+
+
+/* ==========================================================
+   Citas ambientales
+   ========================================================== */
+
+/*
+ | Los tres roles pueden abrir el listado.
+ | El controlador aplica las restricciones:
+ |
+ | Administrador: todas las citas.
+ | Coordinador: citas de su centro.
+ | Ciudadano: solamente sus propias citas.
+ */
+$router->get(
+    'citas',
+    'CitaController',
+    'index',
+    $everyone
+);
+
+/* Formulario exclusivo del ciudadano. */
+$router->get(
+    'citas/crear',
+    'CitaController',
+    'create',
+    ['ciudadano']
+);
+
+$router->post(
+    'citas/guardar',
+    'CitaController',
+    'store',
+    ['ciudadano']
+);
+
+/*
+ | El administrador y coordinador
+ | pueden actualizar los estados.
+ */
+$router->post(
+    'citas/cambiar-estado',
+    'CitaController',
+    'changeStatus',
+    $operations
+);
+
+/* Cancelación exclusiva del propietario. */
+$router->post(
+    'citas/cancelar',
+    'CitaController',
+    'cancel',
+    ['ciudadano']
+);
+
+
+/* ==========================================================
+   Calendario de citas
+   ========================================================== */
+
+/*
+ | Los tres roles pueden abrir el calendario.
+ |
+ | El controlador se encarga de aplicar:
+ | - Administrador: todos o un centro.
+ | - Coordinador: solamente su centro.
+ | - Ciudadano: solamente sus propias citas.
+ */
+$router->get(
+    'calendario',
+    'CalendarioController',
+    'index',
+    $everyone
+);
+
+
+
+/* ==========================================================
+   Juegos y actividades ambientales
+   ========================================================== */
+
+$router->get(
+    'juegos',
+    'JuegoController',
+    'index',
+    $everyone
+);
+
+
+/*
+ | Solamente el administrador y el coordinador
+ | pueden modificar el contenido educativo.
+ */
+$router->get(
+    'juegos/editar',
+    'AdministracionJuegoController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'juegos/actualizar',
+    'AdministracionJuegoController',
+    'update',
+    $operations
+);
+
+
+
+
+$router->get(
+    'juegos/clasificar',
+    'JuegoController',
+    'classification',
+    $everyone
+);
+
+$router->get(
+    'juegos/trivia',
+    'JuegoController',
+    'trivia',
+    $everyone
+);
+
+$router->post(
+    'juegos/resultado',
+    'JuegoController',
+    'storeResult',
+    $everyone
+);
+
+
+$router->get(
+    'juegos/memorama',
+    'JuegoController',
+    'memory',
+    $everyone
+);
+
+$router->get(
+    'juegos/limpia-parque',
+    'JuegoController',
+    'cleanPark',
+    $everyone
+);
+
+$router->get(
+    'juegos/ruta-reciclaje',
+    'JuegoController',
+    'recyclingRoute',
+    $everyone
+);
+
+$router->get(
+    'juegos/decisiones',
+    'JuegoController',
+    'decisions',
+    $everyone
+);
+
+
+
+
+
+/* ==========================================================
+   Notificaciones internas
+   ========================================================== */
+
+/*
+ | Cada usuario consulta únicamente sus propias
+ | notificaciones. El controlador comprueba la propiedad.
+ */
+$router->get(
+    'notificaciones',
+    'NotificacionController',
+    'index',
+    $everyone
+);
+
+$router->post(
+    'notificaciones/leer',
+    'NotificacionController',
+    'read',
+    $everyone
+);
+
+$router->post(
+    'notificaciones/leer-todas',
+    'NotificacionController',
+    'readAll',
+    $everyone
+);
+
+
+/* ==========================================================
+   Reportes y exportaciones
+   ========================================================== */
+
+/*
+ | El administrador puede generar reportes globales.
+ | El coordinador queda restringido a su centro.
+ */
+$router->get(
+    'reportes',
+    'ReporteController',
+    'index',
+    $operations
+);
+
+$router->get(
+    'reportes/pdf',
+    'ReporteController',
+    'pdf',
+    $operations
+);
+
+/*
+ | Esta ruta descarga las exportaciones
+ | creadas mediante PhpSpreadsheet.
+ */
+$router->get(
+    'reportes/excel',
+    'ReporteController',
+    'excel',
+    $operations
+);
+
+
+
+
+
+/* ==========================================================
+   Mi perfil
+   ========================================================== */
+
+/*
+ | Cualquier usuario autenticado puede consultar
+ | y actualizar solamente su propia cuenta.
+ */
+$router->get(
+    'perfil',
+    'PerfilController',
+    'index',
+    $everyone
+);
+
+$router->post(
+    'perfil/actualizar',
+    'PerfilController',
+    'update',
+    $everyone
+);
+
+$router->post(
+    'perfil/cambiar-password',
+    'PerfilController',
+    'changePassword',
+    $everyone
+);
+
+
+
+/* ==========================================================
+   Respaldo y restauración de la base de datos
+   ========================================================== */
+
+/*
+ | Solamente el administrador puede consultar
+ | y ejecutar operaciones de respaldo.
+ */
+$router->get(
+    'respaldos',
+    'RespaldoController',
+    'index',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/generar',
+    'RespaldoController',
+    'generate',
+    ['admin']
+);
+
+$router->get(
+    'respaldos/descargar',
+    'RespaldoController',
+    'download',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/eliminar',
+    'RespaldoController',
+    'delete',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/restaurar',
+    'RespaldoController',
+    'restore',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/restaurar-subido',
+    'RespaldoController',
+    'restoreUploaded',
+    ['admin']
+);

@@ -1,0 +1,124 @@
+{
+    "title": "Misión: limpia el parque",
+    "short_description": "Recoge los residuos y recupera un espacio natural.",
+    "learning": "Identifica residuos mientras observas el impacto de mantener limpios los espacios públicos.",
+    "difficulty": "Intermedio",
+    "objects": [
+        {
+            "id": "waste_botella_de_pl_astico",
+            "label": "Botella de plástico",
+            "emoji": "🧴",
+            "type": "waste",
+            "x": 10,
+            "y": 68
+        },
+        {
+            "id": "waste_lata",
+            "label": "Lata",
+            "emoji": "🥫",
+            "type": "waste",
+            "x": 25,
+            "y": 45
+        },
+        {
+            "id": "waste_bolsa_de_pl_astico",
+            "label": "Bolsa de plástico",
+            "emoji": "🛍️",
+            "type": "waste",
+            "x": 42,
+            "y": 75
+        },
+        {
+            "id": "waste_vaso_desechable",
+            "label": "Vaso desechable",
+            "emoji": "🥤",
+            "type": "waste",
+            "x": 58,
+            "y": 52
+        },
+        {
+            "id": "waste_papel_tirado",
+            "label": "Papel tirado",
+            "emoji": "📄",
+            "type": "waste",
+            "x": 74,
+            "y": 74
+        },
+        {
+            "id": "waste_pila_usada",
+            "label": "Pila usada",
+            "emoji": "🔋",
+            "type": "waste",
+            "x": 88,
+            "y": 48
+        },
+        {
+            "id": "waste_caja_de_cart_on",
+            "label": "Caja de cartón",
+            "emoji": "📦",
+            "type": "waste",
+            "x": 17,
+            "y": 84
+        },
+        {
+            "id": "waste_envoltura",
+            "label": "Envoltura",
+            "emoji": "🍬",
+            "type": "waste",
+            "x": 52,
+            "y": 88
+        },
+        {
+            "id": "waste_peri_odico",
+            "label": "Periódico",
+            "emoji": "📰",
+            "type": "waste",
+            "x": 68,
+            "y": 38
+        },
+        {
+            "id": "waste_botella_de_vidrio",
+            "label": "Botella de vidrio",
+            "emoji": "🍾",
+            "type": "waste",
+            "x": 83,
+            "y": 82
+        },
+        {
+            "id": "nature_flor",
+            "label": "Flor",
+            "emoji": "🌼",
+            "type": "nature",
+            "x": 33,
+            "y": 61,
+            "tip": "Las flores forman parte del parque; obsérvalas sin arrancarlas."
+        },
+        {
+            "id": "nature_mariposa",
+            "label": "Mariposa",
+            "emoji": "🦋",
+            "type": "nature",
+            "x": 47,
+            "y": 28,
+            "tip": "Las mariposas son polinizadoras y debemos proteger su hábitat."
+        },
+        {
+            "id": "nature_ave",
+            "label": "Ave",
+            "emoji": "🐦",
+            "type": "nature",
+            "x": 77,
+            "y": 20,
+            "tip": "Las aves no son residuos; evita molestarlas o alimentarlas con basura."
+        },
+        {
+            "id": "nature_hongo",
+            "label": "Hongo",
+            "emoji": "🍄",
+            "type": "nature",
+            "x": 91,
+            "y": 69,
+            "tip": "Los hongos participan en la descomposición natural del ecosistema."
+        }
+    ]
+}
