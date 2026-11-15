@@ -112,10 +112,7 @@ $metrics = [
         </p>
     </div>
 
-    <span class="chip">
-        <i class="bi bi-tools me-1"></i>
-        <?= count($modules) ?> módulos preparados
-    </span>
+   
 </div>
 
 <!--

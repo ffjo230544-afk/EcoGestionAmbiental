@@ -102,11 +102,11 @@ $metrics = [
 
 
 
-<!-- Aquí destaco las acciones principales que realizará el ciudadano. -->
+<!-- Aquí destaco las acciones principales del ciudadano. -->
 <div class="row g-3 mb-4">
 
     <div class="col-md-4">
-        <article class="eco-card eco-card-body">
+        <article class="eco-card eco-card-body h-100">
 
             <div class="feature-icon">
                 <i class="bi bi-calculator-fill"></i>
@@ -121,15 +121,19 @@ $metrics = [
                 por kilogramo o pieza.
             </p>
 
-         <a
+            <a
                 class="btn btn-eco"
                 href="<?= e(url('cotizador')) ?>"
             >
+                <i class="bi bi-calculator me-2"></i>
+                Realizar cotización
+            </a>
+
         </article>
     </div>
 
     <div class="col-md-4">
-        <article class="eco-card eco-card-body">
+        <article class="eco-card eco-card-body h-100">
 
             <div class="feature-icon">
                 <i class="bi bi-calendar-plus-fill"></i>
@@ -144,15 +148,19 @@ $metrics = [
                 y un horario disponible.
             </p>
 
-           <a
+            <a
                 class="btn btn-eco"
                 href="<?= e(url('citas/crear')) ?>"
             >
+                <i class="bi bi-calendar-plus me-2"></i>
+                Solicitar cita
+            </a>
+
         </article>
     </div>
 
     <div class="col-md-4">
-        <article class="eco-card eco-card-body">
+        <article class="eco-card eco-card-body h-100">
 
             <div class="feature-icon">
                 <i class="bi bi-map-fill"></i>
@@ -167,12 +175,17 @@ $metrics = [
                 y materiales aceptados.
             </p>
 
-          <a
+            <a
                 class="btn btn-eco"
                 href="<?= e(url('mapa')) ?>"
             >
+                <i class="bi bi-map me-2"></i>
+                Abrir mapa
+            </a>
+
         </article>
     </div>
+
 </div>
 
 <div class="page-header">
@@ -188,10 +201,7 @@ $metrics = [
         </p>
     </div>
 
-    <span class="chip">
-        <i class="bi bi-leaf me-1"></i>
-        <?= count($modules) ?> opciones preparadas
-    </span>
+ 
 </div>
 
 <!-- Aquí genero las tarjetas utilizando la configuración del menú ciudadano. -->
