@@ -52,11 +52,24 @@ if (
 }
 
 /*
- | El formulario solamente podrá guardarse
- | cuando existan centros y categorías disponibles.
+ | Si el usuario puede escoger centro, debe existir
+ | por lo menos uno en el selector.
+ |
+ | Cuando el centro está fijado, como sucede con el
+ | coordinador o durante una edición, compruebo el
+ | identificador que ya se encuentra seleccionado.
+ */
+$centerAvailable = $canChooseCenter
+    ? $centers !== []
+    : $selectedPointId > 0;
+
+/*
+ | El formulario solamente puede guardarse cuando
+ | existe un centro válido y alguna categoría que
+ | ese centro tenga configurada para compra.
  */
 $formAvailable =
-    $centers !== []
+    $centerAvailable
     && $categories !== [];
 ?>
 
@@ -87,14 +100,23 @@ $formAvailable =
     </a>
 </div>
 
-<?php if ($centers === []): ?>
+<?php if (!$centerAvailable): ?>
 
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle me-2"></i>
 
-        No existen centros activos que compren
-        materiales. Primero debes configurar los
-        materiales aceptados por un centro.
+        <?php if ($isCoordinator): ?>
+
+            Tu cuenta no tiene un centro activo
+            asignado. Comunícate con el administrador.
+
+        <?php else: ?>
+
+            No existen centros activos que compren
+            materiales. Primero debes configurar los
+            materiales aceptados por un centro.
+
+        <?php endif; ?>
     </div>
 
 <?php elseif ($categories === []): ?>
@@ -104,7 +126,8 @@ $formAvailable =
 
         No existen categorías disponibles para
         registrar tarifas. El centro debe tener por
-        lo menos una categoría marcada como Compra.
+        lo menos una categoría activa, disponible
+        para cotización y marcada como Compra.
     </div>
 
 <?php endif; ?>

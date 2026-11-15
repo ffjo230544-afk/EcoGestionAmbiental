@@ -105,32 +105,6 @@
 
 <?php if (config('show_demo_credentials', false)): ?>
 
-    <div class="demo-credentials mt-4">
-        <strong class="small">
-            <i class="bi bi-info-circle text-eco me-2"></i>
-            Cuentas locales de prueba
-        </strong>
-
-        <p class="small text-muted-eco mt-2 mb-1">
-            Administrador:
-            <code>admin@ecogestion.test</code>
-        </p>
-
-        <p class="small text-muted-eco mb-1">
-            Coordinador:
-            <code>coordinador@ecogestion.test</code>
-        </p>
-
-        <p class="small text-muted-eco mb-1">
-            Ciudadano:
-            <code>ciudadano@ecogestion.test</code>
-        </p>
-
-        <p class="small text-muted-eco mb-0">
-            Contraseña:
-            <code>Password123!</code>
-        </p>
-    </div>
 
 <?php endif; ?>
 

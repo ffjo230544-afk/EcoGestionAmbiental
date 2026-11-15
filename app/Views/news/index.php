@@ -181,215 +181,247 @@
 
 <?php if ($publications !== []): ?>
 
-    <div class="row g-4">
+    
+<div class="row g-4">
 
-        <?php foreach ($publications as $publication): ?>
+    <?php foreach ($publications as $publication): ?>
 
-            <div class="col-xl-4 col-md-6">
-                <article class="eco-card publication-card h-100">
+        <?php
+        /*
+         | Convierto las categorías separadas por comas
+         | en una lista para mostrarlas como etiquetas.
+         */
+        $publicationCategories = [];
 
-                    <div class="publication-cover">
-                        <?php if (
-                            !empty(
+        if (!empty($publication['nombres_categorias'])) {
+            $publicationCategories = preg_split(
+                '/\s*,\s*/',
+                (string) $publication['nombres_categorias'],
+                -1,
+                PREG_SPLIT_NO_EMPTY
+            );
+        }
+        ?>
+
+        <div class="col-md-6 col-xl-4">
+            <article
+                class="eco-card publication-card h-100
+                       d-flex flex-column overflow-hidden"
+            >
+                <div class="publication-cover">
+                    <?php if (
+                        !empty($publication['imagen_portada'])
+                    ): ?>
+
+                        <img
+                            src="<?= e(asset(
                                 $publication['imagen_portada']
-                            )
-                        ): ?>
+                            )) ?>"
+                            alt="Portada de <?= e(
+                                $publication['titulo']
+                            ) ?>"
+                            loading="lazy"
+                        >
 
-                            <img
-                                src="<?= e(
-                                    asset(
-                                        $publication[
-                                            'imagen_portada'
-                                        ]
-                                    )
-                                ) ?>"
-                                alt="Portada de <?= e(
-                                    $publication['titulo']
-                                ) ?>"
-                                loading="lazy"
+                    <?php else: ?>
+
+                        <div class="publication-placeholder">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+
+                    <?php endif; ?>
+                </div>
+
+                <div
+                    class="eco-card-body d-flex
+                           flex-column flex-grow-1"
+                >
+                    <div
+                        class="d-flex flex-wrap
+                               justify-content-between
+                               align-items-center gap-2"
+                    >
+                        <span class="chip">
+                            <i class="bi bi-megaphone"></i>
+
+                            <?= e(
+                                $typeLabels[
+                                    $publication[
+                                        'tipo_publicacion'
+                                    ]
+                                ] ?? 'Publicación'
+                            ) ?>
+                        </span>
+
+                        <?php if ($canManage): ?>
+
+                            <span
+                                class="status-pill
+                                       status-<?= e(
+                                           $publication['estado']
+                                       ) ?>"
                             >
-
-                        <?php else: ?>
-
-                            <div class="publication-placeholder">
-                                <i class="bi bi-megaphone"></i>
-                            </div>
+                                <?= e(match (
+                                    $publication['estado']
+                                ) {
+                                    'publicado' => 'Publicado',
+                                    'inactivo' => 'Inactivo',
+                                    default => 'Borrador',
+                                }) ?>
+                            </span>
 
                         <?php endif; ?>
                     </div>
 
-                    <div class="eco-card-body d-flex
-                                flex-column h-100">
+                    <h2 class="h5 fw-bold mt-3">
+                        <?= e($publication['titulo']) ?>
+                    </h2>
 
-                        <div class="d-flex flex-wrap
-                                    justify-content-between
-                                    align-items-center
-                                    gap-2 mb-3">
+                    <p
+                        class="text-muted-eco
+                               publication-summary"
+                    >
+                        <?= e(
+                            $publication['resumen']
+                            ?: 'Consulta el contenido completo de esta publicación.'
+                        ) ?>
+                    </p>
 
-                            <span class="chip">
-                                <i class="bi bi-megaphone"></i>
+                    <?php if (
+                        $publicationCategories !== []
+                    ): ?>
 
-                                <?= e(
-                                    $typeLabels[
-                                        $publication[
-                                            'tipo_publicacion'
-                                        ]
-                                    ] ?? 'Publicación'
-                                ) ?>
-                            </span>
+                        <div
+                            class="d-flex flex-wrap
+                                   gap-1 mb-3"
+                        >
+                            <?php foreach (
+                                $publicationCategories
+                                as $categoryName
+                            ): ?>
 
-                            <?php if ($canManage): ?>
-
-                                <span class="status-pill
-                                    status-<?= e(
-                                        $publication['estado']
-                                    ) ?>">
-                                    <?= e(match (
-                                        $publication['estado']
-                                    ) {
-                                        'publicado' => 'Publicado',
-                                        'inactivo' => 'Inactivo',
-                                        default => 'Borrador',
-                                    }) ?>
+                                <span class="chip small">
+                                    <i class="bi bi-tag"></i>
+                                    <?= e($categoryName) ?>
                                 </span>
 
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </div>
 
-                        <h2 class="h4 fw-bold">
-                            <?= e($publication['titulo']) ?>
-                        </h2>
+                    <?php endif; ?>
 
-                        <p class="text-muted-eco
-                                  publication-summary">
-                            <?= e(
-                                $publication['resumen']
-                                ?: 'Consulta el contenido completo de esta publicación.'
-                            ) ?>
-                        </p>
+                    <div
+                        class="small text-muted-eco
+                               mb-3"
+                    >
+                        <i class="bi bi-person me-1"></i>
 
-                        <?php if (
-                            !empty(
-                                $publication[
-                                    'nombres_categorias'
+                        <?= e(
+                            $publication['nombre_autor']
+                        ) ?>
+
+                        <span class="mx-1">·</span>
+
+                        <i class="bi bi-calendar3 me-1"></i>
+
+                        <?= e(date_mx(
+                            $publication['fecha_publicacion']
+                            ?: $publication['fecha_creacion']
+                        )) ?>
+                    </div>
+
+                    <!--
+                        Mantengo las acciones al final para que
+                        las tarjetas conserven la misma altura.
+                    -->
+                    <div
+                        class="d-flex flex-wrap
+                               gap-2 mt-auto"
+                    >
+                        <a
+                            href="<?= e(url(
+                                'noticias/detalle',
+                                [
+                                    'id' => $publication[
+                                        'id_publicacion'
+                                    ],
                                 ]
-                            )
-                        ): ?>
+                            )) ?>"
+                            class="btn btn-light-eco"
+                        >
+                            <i class="bi bi-eye me-1"></i>
+                            Ver detalle
+                        </a>
 
-                            <p class="small text-muted-eco">
-                                <i class="bi bi-tags me-1"></i>
-
-                                <?= e(
-                                    $publication[
-                                        'nombres_categorias'
-                                    ]
-                                ) ?>
-                            </p>
-
-                        <?php endif; ?>
-
-                        <div class="small text-muted-eco mb-3">
-                            <div>
-                                <i class="bi bi-person me-1"></i>
-                                <?= e(
-                                    $publication['nombre_autor']
-                                ) ?>
-                            </div>
-
-                            <div class="mt-1">
-                                <i class="bi bi-calendar3 me-1"></i>
-
-                                <?= e(date_mx(
-                                    $publication[
-                                        'fecha_publicacion'
-                                    ]
-                                    ?: $publication[
-                                        'fecha_creacion'
-                                    ]
-                                )) ?>
-                            </div>
-                        </div>
-
-                        <div class="d-flex flex-wrap
-                                    gap-2 mt-auto">
+                        <?php if ($canManage): ?>
 
                             <a
                                 href="<?= e(url(
-                                    'noticias/detalle',
+                                    'noticias/editar',
                                     [
                                         'id' => $publication[
                                             'id_publicacion'
                                         ],
                                     ]
                                 )) ?>"
-                                class="btn btn-eco-outline btn-sm"
+                                class="btn btn-eco-outline"
+                                title="Editar publicación"
+                                aria-label="Editar publicación"
                             >
-                                <i class="bi bi-eye me-1"></i>
-                                Ver detalle
+                                <i class="bi bi-pencil"></i>
                             </a>
 
-                            <?php if ($canManage): ?>
+                            <?php if (
+                                $publication['estado']
+                                !== 'inactivo'
+                            ): ?>
 
-                                <a
-                                    href="<?= e(url(
-                                        'noticias/editar',
-                                        [
-                                            'id' => $publication[
-                                                'id_publicacion'
-                                            ],
-                                        ]
+                                <form
+                                    action="<?= e(url(
+                                        'noticias/desactivar'
                                     )) ?>"
-                                    class="btn btn-outline-secondary btn-sm"
+                                    method="post"
+                                    class="m-0"
+                                    data-confirm="¿Deseas desactivar esta publicación?"
                                 >
-                                    <i class="bi bi-pencil me-1"></i>
-                                    Editar
-                                </a>
+                                    <?= csrf_field() ?>
 
-                                <?php if (
-                                    $publication['estado']
-                                    !== 'inactivo'
-                                ): ?>
-
-                                    <form
-                                        action="<?= e(url(
-                                            'noticias/desactivar'
-                                        )) ?>"
-                                        method="post"
-                                        class="m-0"
+                                    <input
+                                        type="hidden"
+                                        name="id_publicacion"
+                                        value="<?= (int)
+                                            $publication[
+                                                'id_publicacion'
+                                            ] ?>"
                                     >
-                                        <?= csrf_field() ?>
 
-                                        <input
-                                            type="hidden"
-                                            name="id_publicacion"
-                                            value="<?= e(
-                                                $publication[
-                                                    'id_publicacion'
-                                                ]
-                                            ) ?>"
-                                        >
-
-                                        <button
-                                            type="submit"
-                                            class="btn btn-outline-danger
-                                                   btn-sm"
-                                            data-confirm="¿Deseas desactivar esta publicación?"
-                                        >
-                                            <i class="bi bi-x-circle me-1"></i>
-                                            Desactivar
-                                        </button>
-                                    </form>
-
-                                <?php endif; ?>
+                                    <button
+                                        type="submit"
+                                        class="btn
+                                               btn-outline-danger"
+                                        title="Desactivar publicación"
+                                        aria-label="Desactivar publicación"
+                                    >
+                                        <i
+                                            class="bi
+                                                   bi-x-circle"
+                                        ></i>
+                                    </button>
+                                </form>
 
                             <?php endif; ?>
-                        </div>
-                    </div>
-                </article>
-            </div>
 
-        <?php endforeach; ?>
-    </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+    <?php endforeach; ?>
+
+</div>
+
+
 
 <?php else: ?>
 

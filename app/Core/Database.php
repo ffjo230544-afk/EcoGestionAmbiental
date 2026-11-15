@@ -17,7 +17,7 @@ final class Database
      * Aquí obtengo una conexión configurada con MySQL.
      *
      * El parámetro permite conectarme con o sin seleccionar la base.
-     * Más adelante lo utilizaremos para construir el instalador.
+     * para el instalador
      */
     public static function connection(
         bool $includeDatabase = true

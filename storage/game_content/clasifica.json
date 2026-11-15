@@ -2,7 +2,7 @@
     "title": "Clasifica los residuos",
     "short_description": "Arrastra cada residuo al contenedor correcto antes de terminar.",
     "learning": "Aprende a separar residuos reciclables, orgánicos, especiales y peligrosos.",
-    "difficulty": "Básico",
+    "difficulty": "Intermedio",
     "categories": {
         "plastico": {
             "label": "Plástico",

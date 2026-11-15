@@ -1,0 +1,107 @@
+{
+    "title": "EcoTrivia Prueba",
+    "short_description": "Responde preguntas y descubre datos útiles para cuidar el ambiente.",
+    "learning": "Refuerza conocimientos sobre agua, energía, reciclaje y consumo responsable.",
+    "difficulty": "Básico",
+    "questions": [
+        {
+            "id": "q1",
+            "question": "¿Dónde debe llevarse una pila usada?",
+            "options": {
+                "a": "Al contenedor de residuos orgánicos",
+                "b": "A un centro de recolección autorizado",
+                "c": "A cualquier bote de basura"
+            },
+            "correct": "b",
+            "explanation": "Las pilas contienen sustancias que pueden contaminar el suelo y el agua; deben entregarse en centros autorizados."
+        },
+        {
+            "id": "q2",
+            "question": "¿Cuál de estas acciones ayuda más a ahorrar agua?",
+            "options": {
+                "a": "Cerrar la llave mientras te cepillas los dientes",
+                "b": "Dejar correr el agua para que se enfríe",
+                "c": "Lavar la banqueta con manguera"
+            },
+            "correct": "a",
+            "explanation": "Cerrar la llave evita desperdiciar varios litros de agua durante cada cepillado."
+        },
+        {
+            "id": "q3",
+            "question": "¿Qué significa reutilizar?",
+            "options": {
+                "a": "Usar un objeto nuevamente o darle otra función",
+                "b": "Comprar el mismo producto varias veces",
+                "c": "Quemar los residuos para eliminarlos"
+            },
+            "correct": "a",
+            "explanation": "Reutilizar prolonga la vida de los objetos y evita generar residuos innecesarios."
+        },
+        {
+            "id": "q4",
+            "question": "¿Cuál es un residuo orgánico?",
+            "options": {
+                "a": "Una botella de vidrio",
+                "b": "Una lata de aluminio",
+                "c": "La cáscara de una fruta"
+            },
+            "correct": "c",
+            "explanation": "Los restos de origen vegetal o animal pueden descomponerse y, en muchos casos, convertirse en composta."
+        },
+        {
+            "id": "q5",
+            "question": "¿Qué conviene hacer antes de reciclar un envase?",
+            "options": {
+                "a": "Vaciarlo y limpiarlo ligeramente",
+                "b": "Llenarlo con otros residuos",
+                "c": "Romperlo siempre"
+            },
+            "correct": "a",
+            "explanation": "Un envase vacío y limpio evita malos olores y facilita su aprovechamiento."
+        },
+        {
+            "id": "q6",
+            "question": "¿Cuál opción reduce el uso de plásticos desechables?",
+            "options": {
+                "a": "Usar una botella rellenable",
+                "b": "Comprar vasos desechables diariamente",
+                "c": "Pedir bolsas adicionales"
+            },
+            "correct": "a",
+            "explanation": "Los recipientes reutilizables sustituyen muchos productos de un solo uso."
+        },
+        {
+            "id": "q7",
+            "question": "¿Qué se debe hacer con un teléfono que ya no funciona?",
+            "options": {
+                "a": "Abandonarlo en la calle",
+                "b": "Entregarlo en un centro que reciba electrónicos",
+                "c": "Mezclarlo con residuos de comida"
+            },
+            "correct": "b",
+            "explanation": "Los electrónicos contienen materiales recuperables y componentes que requieren manejo especial."
+        },
+        {
+            "id": "q8",
+            "question": "¿Cuál fuente de energía es renovable?",
+            "options": {
+                "a": "Carbón",
+                "b": "Petróleo",
+                "c": "Energía solar"
+            },
+            "correct": "c",
+            "explanation": "La energía solar aprovecha una fuente natural que se renueva continuamente."
+        },
+        {
+            "id": "q9",
+            "question": "¿Qué es la composta?",
+            "options": {
+                "a": "Abono producido con residuos orgánicos",
+                "b": "Una mezcla de plástico y metal",
+                "c": "Agua almacenada para beber"
+            },
+            "correct": "a",
+            "explanation": "La composta transforma residuos orgánicos en un material útil para mejorar el suelo."
+        }
+    ]
+}

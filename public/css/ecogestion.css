@@ -1222,9 +1222,14 @@ a:hover {
 
 .publication-cover {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 210px;
+  flex-shrink: 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #eef8f1, #dcefe3);
+  background: linear-gradient(
+    135deg,
+    #e8f5ec,
+    #d7eee0
+  );
 }
 
 .publication-cover img {
@@ -1246,6 +1251,23 @@ a:hover {
 .publication-summary {
   line-height: 1.65;
 }
+
+
+/*
+ | Mantengo una distribución uniforme en las tarjetas
+ | de noticias, avisos, campañas y eventos.
+ */
+.publication-card .eco-card-body {
+  flex: 1;
+}
+
+@media (max-width: 767.98px) {
+  .publication-cover {
+    height: 190px;
+  }
+}
+
+
 
 .publication-detail-cover {
   width: 100%;

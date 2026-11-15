@@ -1,0 +1,216 @@
+{
+    "title": "Decisiones ecológicas en casa",
+    "short_description": "Toma decisiones cotidianas y descubre su impacto ambiental.",
+    "learning": "Practica hábitos responsables relacionados con agua, energía y consumo.",
+    "difficulty": "Avanzado",
+    "scenarios": [
+        {
+            "id": "ba_no_mientras_te_cepillas_los_dientes_qu_e_haces_con_la_llave",
+            "room": "Baño",
+            "icon": "bi-droplet-fill",
+            "question": "Mientras te cepillas los dientes, ¿qué haces con la llave?",
+            "options": [
+                {
+                    "id": "la_dejo_abierta_todo_el_tiempo",
+                    "label": "La dejo abierta todo el tiempo",
+                    "impact": 0,
+                    "feedback": "Una llave abierta desperdicia varios litros en pocos minutos."
+                },
+                {
+                    "id": "la_dejo_abierta_con_poca_presi_on",
+                    "label": "La dejo abierta con poca presión",
+                    "impact": 1,
+                    "feedback": "Reducir el flujo ayuda, pero todavía se desperdicia agua."
+                },
+                {
+                    "id": "la_cierro_hasta_que_necesito_enjuagarme",
+                    "label": "La cierro hasta que necesito enjuagarme",
+                    "impact": 2,
+                    "feedback": "Cerrar la llave durante el cepillado evita un consumo innecesario."
+                }
+            ]
+        },
+        {
+            "id": "sala_sales_de_una_habitaci_on_que_quedar_a_vac_ia_qu_e_haces",
+            "room": "Sala",
+            "icon": "bi-lightbulb-fill",
+            "question": "Sales de una habitación que quedará vacía. ¿Qué haces?",
+            "options": [
+                {
+                    "id": "dejo_luces_y_televisi_on_encendidas",
+                    "label": "Dejo luces y televisión encendidas",
+                    "impact": 0,
+                    "feedback": "Los aparatos encendidos consumen energía aunque nadie los use."
+                },
+                {
+                    "id": "apago_la_luz_pero_dejo_la_televisi_on",
+                    "label": "Apago la luz, pero dejo la televisión",
+                    "impact": 1,
+                    "feedback": "Apagar la luz ayuda, pero también conviene apagar los demás aparatos."
+                },
+                {
+                    "id": "apago_todo_lo_que_no_se_est_a_usando",
+                    "label": "Apago todo lo que no se está usando",
+                    "impact": 2,
+                    "feedback": "Evitar consumos innecesarios reduce energía y emisiones asociadas."
+                }
+            ]
+        },
+        {
+            "id": "lavander_ia_tienes_poca_ropa_sucia_y_no_es_urgente_lavarla_qu_e_eliges",
+            "room": "Lavandería",
+            "icon": "bi-basket2-fill",
+            "question": "Tienes poca ropa sucia y no es urgente lavarla. ¿Qué eliges?",
+            "options": [
+                {
+                    "id": "uso_la_lavadora_con_esa_carga_peque_na",
+                    "label": "Uso la lavadora con esa carga pequeña",
+                    "impact": 0,
+                    "feedback": "Una carga pequeña utiliza casi la misma agua y energía que una completa."
+                },
+                {
+                    "id": "espero_una_carga_completa_y_uso_agua_caliente",
+                    "label": "Espero una carga completa y uso agua caliente",
+                    "impact": 1,
+                    "feedback": "La carga completa es mejor, aunque calentar agua incrementa el consumo."
+                },
+                {
+                    "id": "espero_una_carga_completa_y_uso_agua_fr_ia",
+                    "label": "Espero una carga completa y uso agua fría",
+                    "impact": 2,
+                    "feedback": "Aprovechar la capacidad y lavar en frío ahorra agua y energía."
+                }
+            ]
+        },
+        {
+            "id": "compras_vas_al_mercado_por_varios_productos_c_omo_los_transportas",
+            "room": "Compras",
+            "icon": "bi-bag-heart-fill",
+            "question": "Vas al mercado por varios productos. ¿Cómo los transportas?",
+            "options": [
+                {
+                    "id": "pido_una_bolsa_desechable_para_cada_producto",
+                    "label": "Pido una bolsa desechable para cada producto",
+                    "impact": 0,
+                    "feedback": "Las bolsas de un solo uso generan residuos evitables."
+                },
+                {
+                    "id": "pido_pocas_bolsas_y_las_lleno_bien",
+                    "label": "Pido pocas bolsas y las lleno bien",
+                    "impact": 1,
+                    "feedback": "Usar menos bolsas reduce residuos, pero todavía requiere material nuevo."
+                },
+                {
+                    "id": "llevo_bolsas_reutilizables",
+                    "label": "Llevo bolsas reutilizables",
+                    "impact": 2,
+                    "feedback": "Reutilizar una bolsa muchas veces evita numerosos desechables."
+                }
+            ]
+        },
+        {
+            "id": "cocina_quedan_c_ascaras_de_frutas_y_verduras_despu_es_de_cocinar_qu_e_haces",
+            "room": "Cocina",
+            "icon": "bi-egg-fried",
+            "question": "Quedan cáscaras de frutas y verduras después de cocinar. ¿Qué haces?",
+            "options": [
+                {
+                    "id": "las_arrojo_al_drenaje",
+                    "label": "Las arrojo al drenaje",
+                    "impact": 0,
+                    "feedback": "Los restos sólidos pueden obstruir tuberías y contaminar el agua."
+                },
+                {
+                    "id": "las_mezclo_con_toda_la_basura",
+                    "label": "Las mezclo con toda la basura",
+                    "impact": 1,
+                    "feedback": "Se evita el drenaje, pero se pierde la oportunidad de aprovecharlas."
+                },
+                {
+                    "id": "las_separo_para_composta",
+                    "label": "Las separo para composta",
+                    "impact": 2,
+                    "feedback": "Los residuos vegetales pueden transformarse en abono para el suelo."
+                }
+            ]
+        },
+        {
+            "id": "rec_amara_no_usar_as_durante_varios_d_ias_una_consola_y_su_pantalla_qu_e_haces",
+            "room": "Recámara",
+            "icon": "bi-plug-fill",
+            "question": "No usarás durante varios días una consola y su pantalla. ¿Qué haces?",
+            "options": [
+                {
+                    "id": "los_dejo_encendidos_para_regresar_r_apido",
+                    "label": "Los dejo encendidos para regresar rápido",
+                    "impact": 0,
+                    "feedback": "Mantener equipos encendidos consume energía y reduce su vida útil."
+                },
+                {
+                    "id": "los_dejo_conectados_en_modo_de_espera",
+                    "label": "Los dejo conectados en modo de espera",
+                    "impact": 1,
+                    "feedback": "El modo de espera consume menos, pero mantiene un consumo fantasma."
+                },
+                {
+                    "id": "los_apago_y_desconecto_de_forma_segura",
+                    "label": "Los apago y desconecto de forma segura",
+                    "impact": 2,
+                    "feedback": "Desconectar equipos sin uso evita el consumo eléctrico en espera."
+                }
+            ]
+        },
+        {
+            "id": "patio_detectas_una_llave_que_gotea_constantemente_qu_e_haces",
+            "room": "Patio",
+            "icon": "bi-wrench-adjustable-circle-fill",
+            "question": "Detectas una llave que gotea constantemente. ¿Qué haces?",
+            "options": [
+                {
+                    "id": "la_ignoro_porque_cada_gota_parece_peque_na",
+                    "label": "La ignoro porque cada gota parece pequeña",
+                    "impact": 0,
+                    "feedback": "Muchas gotas durante el día representan una cantidad importante de agua."
+                },
+                {
+                    "id": "coloco_un_recipiente_y_pospongo_la_reparaci_on",
+                    "label": "Coloco un recipiente y pospongo la reparación",
+                    "impact": 1,
+                    "feedback": "Recuperar agua ayuda temporalmente, pero la fuga continúa."
+                },
+                {
+                    "id": "cierro_el_paso_y_solicito_o_realizo_la_reparaci_on",
+                    "label": "Cierro el paso y solicito o realizo la reparación",
+                    "impact": 2,
+                    "feedback": "Reparar la causa detiene el desperdicio de manera permanente."
+                }
+            ]
+        },
+        {
+            "id": "climatizaci_on_la_casa_est_a_caliente_pero_afuera_corre_aire_fresco_qu_e_haces_primero",
+            "room": "Climatización",
+            "icon": "bi-thermometer-sun",
+            "question": "La casa está caliente, pero afuera corre aire fresco. ¿Qué haces primero?",
+            "options": [
+                {
+                    "id": "enciendo_el_aire_acondicionado_a_la_temperatura_m_inima",
+                    "label": "Enciendo el aire acondicionado a la temperatura mínima",
+                    "impact": 0,
+                    "feedback": "Una temperatura extrema aumenta considerablemente el consumo eléctrico."
+                },
+                {
+                    "id": "uso_ventilador_con_todas_las_ventanas_cerradas",
+                    "label": "Uso ventilador con todas las ventanas cerradas",
+                    "impact": 1,
+                    "feedback": "El ventilador consume menos, aunque no se aprovecha el aire exterior."
+                },
+                {
+                    "id": "abro_ventanas_y_favorezco_la_ventilaci_on_cruzada",
+                    "label": "Abro ventanas y favorezco la ventilación cruzada",
+                    "impact": 2,
+                    "feedback": "Aprovechar la ventilación natural puede refrescar sin consumir electricidad."
+                }
+            ]
+        }
+    ]
+}

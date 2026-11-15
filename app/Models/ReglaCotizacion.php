@@ -114,9 +114,16 @@ public function availableCategories(
     if ($pointId > 0) {
         return $this->rows(
             'SELECT
-                c.id_categoria,
-                c.nombre,
-                c.color_hex
+    c.id_categoria,
+    c.nombre,
+    c.color_hex,
+
+    /*
+     | También regreso el centro relacionado
+     | para que el formulario pueda identificar
+     | dónde está disponible la categoría.
+     */
+    pc.id_punto AS centros
 
              FROM categorias_residuos AS c
 
@@ -249,7 +256,8 @@ public function categoriesWithCenters(): array
                 DISTINCT pc.id_punto
                 ORDER BY pc.id_punto
                 SEPARATOR ","
-            ) AS centros_compra
+            ) AS centros
+            
 
          FROM categorias_residuos AS c
 
