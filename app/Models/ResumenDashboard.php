@@ -204,4 +204,352 @@ final class ResumenDashboard extends Model
             ),
         ];
     }
+
+
+
+
+    /**
+     * Obtengo los centros activos disponibles
+     * para los filtros de los dashboards.
+     */
+    public function activeCenters(): array
+    {
+        return $this->rows(
+            'SELECT
+                id_punto,
+                nombre,
+                municipio
+             FROM puntos_atencion
+             WHERE estado = ?
+             ORDER BY nombre',
+            ['activo']
+        );
+    }
+
+    /**
+     * Obtengo los resultados filtrados
+     * que consultará el administrador.
+     */
+    public function administratorPeriod(
+        string $dateFrom,
+        string $dateTo,
+        int $pointId
+    ): array {
+        return [
+            'cotizaciones_periodo' =>
+                $this->quotationCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId
+                ),
+
+            'cotizaciones_pendientes_periodo' =>
+                $this->quotationCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    0,
+                    ['pendiente']
+                ),
+
+            'citas_periodo' =>
+                $this->appointmentCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId
+                ),
+
+            'citas_activas_periodo' =>
+                $this->appointmentCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    0,
+                    [
+                        'pendiente',
+                        'confirmada',
+                    ]
+                ),
+        ];
+    }
+
+    /**
+     * Obtengo los resultados del periodo
+     * para el centro del coordinador.
+     */
+    public function coordinatorPeriod(
+        int $pointId,
+        string $dateFrom,
+        string $dateTo
+    ): array {
+        return [
+            'cotizaciones_periodo' =>
+                $this->quotationCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId
+                ),
+
+            'cotizaciones_pendientes_periodo' =>
+                $this->quotationCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    0,
+                    ['pendiente']
+                ),
+
+            'citas_periodo' =>
+                $this->appointmentCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId
+                ),
+
+            'citas_activas_periodo' =>
+                $this->appointmentCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    0,
+                    [
+                        'pendiente',
+                        'confirmada',
+                    ]
+                ),
+        ];
+    }
+
+    /**
+     * Obtengo la actividad del ciudadano
+     * durante el periodo seleccionado.
+     */
+    public function citizenPeriod(
+        int $userId,
+        string $dateFrom,
+        string $dateTo,
+        int $pointId
+    ): array {
+        return [
+            'cotizaciones_periodo' =>
+                $this->quotationCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    $userId
+                ),
+
+            'cotizaciones_pendientes_periodo' =>
+                $this->quotationCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    $userId,
+                    ['pendiente']
+                ),
+
+            'citas_periodo' =>
+                $this->appointmentCount(
+                    $dateFrom,
+                    $dateTo,
+                    $pointId,
+                    $userId
+                ),
+
+            /*
+             | Los juegos no pertenecen a un centro.
+             | Por eso sus puntos solamente se filtran
+             | por usuario y rango de fechas.
+             */
+            'puntos_periodo' =>
+                $this->environmentalPoints(
+                    $userId,
+                    $dateFrom,
+                    $dateTo
+                ),
+        ];
+    }
+
+    /**
+     * Cuento cotizaciones aplicando únicamente
+     * los filtros que hayan sido seleccionados.
+     */
+    private function quotationCount(
+        string $dateFrom,
+        string $dateTo,
+        int $pointId = 0,
+        int $userId = 0,
+        array $statuses = []
+    ): int {
+        $conditions = ['1 = 1'];
+        $parameters = [];
+
+        if ($dateFrom !== '') {
+            $conditions[] =
+                'fecha_cotizacion >= ?';
+
+            $parameters[] =
+                $dateFrom . ' 00:00:00';
+        }
+
+        if ($dateTo !== '') {
+            $conditions[] =
+                'fecha_cotizacion <= ?';
+
+            $parameters[] =
+                $dateTo . ' 23:59:59';
+        }
+
+        if ($pointId > 0) {
+            $conditions[] = 'id_punto = ?';
+            $parameters[] = $pointId;
+        }
+
+        if ($userId > 0) {
+            $conditions[] = 'id_usuario = ?';
+            $parameters[] = $userId;
+        }
+
+        if ($statuses !== []) {
+            $markers = implode(
+                ', ',
+                array_fill(
+                    0,
+                    count($statuses),
+                    '?'
+                )
+            );
+
+            $conditions[] =
+                'estado IN (' . $markers . ')';
+
+            foreach ($statuses as $status) {
+                $parameters[] = $status;
+            }
+        }
+
+        return (int) $this->scalar(
+            'SELECT COUNT(*)
+             FROM cotizaciones
+             WHERE '
+             . implode(
+                 ' AND ',
+                 $conditions
+             ),
+            $parameters
+        );
+    }
+
+    /**
+     * Cuento citas aplicando el periodo,
+     * el centro, el usuario y el estado.
+     */
+    private function appointmentCount(
+        string $dateFrom,
+        string $dateTo,
+        int $pointId = 0,
+        int $userId = 0,
+        array $statuses = []
+    ): int {
+        $conditions = ['1 = 1'];
+        $parameters = [];
+
+        if ($dateFrom !== '') {
+            $conditions[] = 'fecha_cita >= ?';
+            $parameters[] = $dateFrom;
+        }
+
+        if ($dateTo !== '') {
+            $conditions[] = 'fecha_cita <= ?';
+            $parameters[] = $dateTo;
+        }
+
+        if ($pointId > 0) {
+            $conditions[] = 'id_punto = ?';
+            $parameters[] = $pointId;
+        }
+
+        if ($userId > 0) {
+            $conditions[] = 'id_usuario = ?';
+            $parameters[] = $userId;
+        }
+
+        if ($statuses !== []) {
+            $markers = implode(
+                ', ',
+                array_fill(
+                    0,
+                    count($statuses),
+                    '?'
+                )
+            );
+
+            $conditions[] =
+                'estado IN (' . $markers . ')';
+
+            foreach ($statuses as $status) {
+                $parameters[] = $status;
+            }
+        }
+
+        return (int) $this->scalar(
+            'SELECT COUNT(*)
+             FROM citas
+             WHERE '
+             . implode(
+                 ' AND ',
+                 $conditions
+             ),
+            $parameters
+        );
+    }
+
+    /**
+     * Sumo los puntos obtenidos por el ciudadano
+     * dentro del periodo solicitado.
+     */
+    private function environmentalPoints(
+        int $userId,
+        string $dateFrom,
+        string $dateTo
+    ): int {
+        $conditions = ['id_usuario = ?'];
+        $parameters = [$userId];
+
+        if ($dateFrom !== '') {
+            $conditions[] =
+                'fecha_resultado >= ?';
+
+            $parameters[] =
+                $dateFrom . ' 00:00:00';
+        }
+
+        if ($dateTo !== '') {
+            $conditions[] =
+                'fecha_resultado <= ?';
+
+            $parameters[] =
+                $dateTo . ' 23:59:59';
+        }
+
+        return (int) $this->scalar(
+            'SELECT COALESCE(
+                SUM(puntaje_obtenido),
+                0
+             )
+             FROM resultados_gamificacion
+             WHERE '
+             . implode(
+                 ' AND ',
+                 $conditions
+             ),
+            $parameters
+        );
+    }
+
+
+
+
+
+
 }

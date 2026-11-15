@@ -95,7 +95,257 @@ $metrics = [
 
 
 
+<!--
+    Aquí permito consultar mi actividad
+    durante un periodo y centro específico.
+-->
+<section class="eco-card mb-4">
+    <div class="eco-card-head">
+        <div>
+            <h2 class="eco-card-title">
+                Consultar mi actividad
+            </h2>
 
+            <p class="text-muted-eco small mb-0 mt-1">
+                Selecciona un periodo y un centro
+                para consultar tus registros.
+            </p>
+        </div>
+
+        <i class="bi bi-funnel text-eco fs-4"></i>
+    </div>
+
+    <div class="eco-card-body">
+        <form
+            action="<?= e(url('ciudadano')) ?>"
+            method="get"
+            class="row g-3 align-items-end"
+        >
+            <input
+                type="hidden"
+                name="ruta"
+                value="ciudadano"
+            >
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="desde"
+                    class="form-label"
+                >
+                    Fecha inicial
+                </label>
+
+                <input
+                    id="desde"
+                    type="date"
+                    name="desde"
+                    class="form-control"
+                    value="<?= e(
+                        $filters['date_from']
+                    ) ?>"
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="hasta"
+                    class="form-label"
+                >
+                    Fecha final
+                </label>
+
+                <input
+                    id="hasta"
+                    type="date"
+                    name="hasta"
+                    class="form-control"
+                    value="<?= e(
+                        $filters['date_to']
+                    ) ?>"
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="centro"
+                    class="form-label"
+                >
+                    Centro de atención
+                </label>
+
+                <select
+                    id="centro"
+                    name="centro"
+                    class="form-select"
+                >
+                    <option value="0">
+                        Todos los centros
+                    </option>
+
+                    <?php foreach (
+                        $centers as $center
+                    ): ?>
+
+                        <option
+                            value="<?= (int)
+                                $center['id_punto'] ?>"
+                            <?= selected(
+                                $filters['point_id'],
+                                $center['id_punto']
+                            ) ?>
+                        >
+                            <?= e($center['nombre']) ?>
+
+                            <?php if (
+                                !empty($center['municipio'])
+                            ): ?>
+                                — <?= e(
+                                    $center['municipio']
+                                ) ?>
+                            <?php endif; ?>
+                        </option>
+
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-eco flex-grow-1"
+                    >
+                        <i class="bi bi-search me-2"></i>
+                        Consultar
+                    </button>
+
+                    <a
+                        href="<?= e(
+                            url('ciudadano')
+                        ) ?>"
+                        class="btn btn-eco-outline"
+                        title="Limpiar filtros"
+                        aria-label="Limpiar filtros"
+                    >
+                        <i
+                            class="bi
+                                   bi-arrow-counterclockwise"
+                        ></i>
+                    </a>
+
+                </div>
+            </div>
+        </form>
+
+        <div class="form-text mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+
+            El centro se aplica a las cotizaciones
+            y citas. Los puntos ambientales solamente
+            se filtran por el periodo seleccionado.
+        </div>
+    </div>
+</section>
+
+<div
+    class="d-flex justify-content-between
+           align-items-center flex-wrap
+           gap-2 mb-3"
+>
+    <div>
+        <h2 class="h5 fw-bold mb-1">
+            Mi actividad del periodo
+        </h2>
+
+        <p class="text-muted-eco small mb-0">
+            <?= e($periodLabel) ?>
+            ·
+            <?= e($selectedCenterName) ?>
+        </p>
+    </div>
+
+    <span class="chip">
+        <i class="bi bi-person-check me-1"></i>
+        Información personal
+    </span>
+</div>
+
+<?php
+/*
+ | Aquí preparo los resultados personales
+ | obtenidos mediante los filtros.
+ */
+$periodMetrics = [
+    [
+        'Mis cotizaciones',
+        $periodSummary[
+            'cotizaciones_periodo'
+        ],
+        'bi-receipt',
+        'Registros del periodo',
+    ],
+    [
+        'Cotizaciones pendientes',
+        $periodSummary[
+            'cotizaciones_pendientes_periodo'
+        ],
+        'bi-hourglass-split',
+        'En espera de revisión',
+    ],
+    [
+        'Mis citas',
+        $periodSummary[
+            'citas_periodo'
+        ],
+        'bi-calendar3',
+        'Registros del periodo',
+    ],
+    [
+        'Puntos obtenidos',
+        $periodSummary[
+            'puntos_periodo'
+        ],
+        'bi-stars',
+        'Durante el periodo',
+    ],
+];
+?>
+
+<div class="row g-3 mb-4">
+
+    <?php foreach (
+        $periodMetrics
+        as [$label, $value, $icon, $meta]
+    ): ?>
+
+        <div class="col-6 col-xl-3">
+            <article
+                class="eco-card metric-card h-100"
+            >
+                <div class="metric-icon">
+                    <i
+                        class="bi <?= e($icon) ?>"
+                    ></i>
+                </div>
+
+                <div class="metric-value">
+                    <?= e($value) ?>
+                </div>
+
+                <div class="metric-label">
+                    <?= e($label) ?>
+                </div>
+
+                <div class="metric-meta">
+                    <?= e($meta) ?>
+                </div>
+            </article>
+        </div>
+
+    <?php endforeach; ?>
+
+</div>
 
 
 

@@ -93,7 +93,253 @@ $metrics = [
 
 
 
+<!--
+    Aquí permito consultar la actividad
+    de un centro durante un periodo específico.
+-->
+<section class="eco-card mb-4">
+    <div class="eco-card-head">
+        <div>
+            <h2 class="eco-card-title">
+                Consultar actividad por periodo
+            </h2>
 
+            <p class="text-muted-eco small mb-0 mt-1">
+                Selecciona las fechas y el centro
+                que deseas analizar.
+            </p>
+        </div>
+
+        <i class="bi bi-funnel text-eco fs-4"></i>
+    </div>
+
+    <div class="eco-card-body">
+        <form
+            action="<?= e(url('administrador')) ?>"
+            method="get"
+            class="row g-3 align-items-end"
+        >
+            <!--
+                En los formularios GET vuelvo a enviar
+                la ruta porque la consulta anterior se reemplaza.
+            -->
+            <input
+                type="hidden"
+                name="ruta"
+                value="administrador"
+            >
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="desde"
+                    class="form-label"
+                >
+                    Fecha inicial
+                </label>
+
+                <input
+                    id="desde"
+                    type="date"
+                    name="desde"
+                    class="form-control"
+                    value="<?= e(
+                        $filters['date_from']
+                    ) ?>"
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="hasta"
+                    class="form-label"
+                >
+                    Fecha final
+                </label>
+
+                <input
+                    id="hasta"
+                    type="date"
+                    name="hasta"
+                    class="form-control"
+                    value="<?= e(
+                        $filters['date_to']
+                    ) ?>"
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="centro"
+                    class="form-label"
+                >
+                    Centro de atención
+                </label>
+
+                <select
+                    id="centro"
+                    name="centro"
+                    class="form-select"
+                >
+                    <option value="0">
+                        Todos los centros
+                    </option>
+
+                    <?php foreach (
+                        $centers as $center
+                    ): ?>
+
+                        <option
+                            value="<?= (int)
+                                $center['id_punto'] ?>"
+                            <?= selected(
+                                $filters['point_id'],
+                                $center['id_punto']
+                            ) ?>
+                        >
+                            <?= e($center['nombre']) ?>
+
+                            <?php if (
+                                !empty($center['municipio'])
+                            ): ?>
+                                — <?= e(
+                                    $center['municipio']
+                                ) ?>
+                            <?php endif; ?>
+                        </option>
+
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-eco flex-grow-1"
+                    >
+                        <i class="bi bi-search me-2"></i>
+                        Consultar
+                    </button>
+
+                    <a
+                        href="<?= e(
+                            url('administrador')
+                        ) ?>"
+                        class="btn btn-eco-outline"
+                        title="Limpiar filtros"
+                        aria-label="Limpiar filtros"
+                    >
+                        <i
+                            class="bi
+                                   bi-arrow-counterclockwise"
+                        ></i>
+                    </a>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<div
+    class="d-flex justify-content-between
+           align-items-center flex-wrap
+           gap-2 mb-3"
+>
+    <div>
+        <h2 class="h5 fw-bold mb-1">
+            Resultados del periodo
+        </h2>
+
+        <p class="text-muted-eco small mb-0">
+            <?= e($periodLabel) ?>
+            ·
+            <?= e($selectedCenterName) ?>
+        </p>
+    </div>
+
+    <span class="chip">
+        <i class="bi bi-bar-chart me-1"></i>
+        Resultados filtrados
+    </span>
+</div>
+
+<?php
+/*
+ | Aquí preparo las cifras obtenidas
+ | mediante los filtros seleccionados.
+ */
+$periodMetrics = [
+    [
+        'Cotizaciones del periodo',
+        $periodSummary[
+            'cotizaciones_periodo'
+        ],
+        'bi-receipt',
+        'Registros encontrados',
+    ],
+    [
+        'Cotizaciones pendientes',
+        $periodSummary[
+            'cotizaciones_pendientes_periodo'
+        ],
+        'bi-hourglass-split',
+        'Requieren revisión',
+    ],
+    [
+        'Citas del periodo',
+        $periodSummary[
+            'citas_periodo'
+        ],
+        'bi-calendar3',
+        'Todos los estados',
+    ],
+    [
+        'Citas activas',
+        $periodSummary[
+            'citas_activas_periodo'
+        ],
+        'bi-calendar2-check-fill',
+        'Pendientes o confirmadas',
+    ],
+];
+?>
+
+<div class="row g-3 mb-4">
+
+    <?php foreach (
+        $periodMetrics
+        as [$label, $value, $icon, $meta]
+    ): ?>
+
+        <div class="col-6 col-xl-3">
+            <article
+                class="eco-card metric-card h-100"
+            >
+                <div class="metric-icon">
+                    <i
+                        class="bi <?= e($icon) ?>"
+                    ></i>
+                </div>
+
+                <div class="metric-value">
+                    <?= e($value) ?>
+                </div>
+
+                <div class="metric-label">
+                    <?= e($label) ?>
+                </div>
+
+                <div class="metric-meta">
+                    <?= e($meta) ?>
+                </div>
+            </article>
+        </div>
+
+    <?php endforeach; ?>
+
+</div>
 
 
 

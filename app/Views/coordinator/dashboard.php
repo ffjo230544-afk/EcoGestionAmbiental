@@ -91,6 +91,232 @@ $metrics = [
 
 
 
+<!--
+    Aquí permito consultar la actividad
+    del centro asignado durante un periodo.
+-->
+<section class="eco-card mb-4">
+    <div class="eco-card-head">
+        <div>
+            <h2 class="eco-card-title">
+                Consultar actividad por periodo
+            </h2>
+
+            <p class="text-muted-eco small mb-0 mt-1">
+                Los resultados pertenecen únicamente
+                al centro que tengo asignado.
+            </p>
+        </div>
+
+        <i class="bi bi-funnel text-eco fs-4"></i>
+    </div>
+
+    <div class="eco-card-body">
+        <form
+            action="<?= e(url('coordinador')) ?>"
+            method="get"
+            class="row g-3 align-items-end"
+        >
+            <input
+                type="hidden"
+                name="ruta"
+                value="coordinador"
+            >
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="desde"
+                    class="form-label"
+                >
+                    Fecha inicial
+                </label>
+
+                <input
+                    id="desde"
+                    type="date"
+                    name="desde"
+                    class="form-control"
+                    value="<?= e(
+                        $filters['date_from']
+                    ) ?>"
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="hasta"
+                    class="form-label"
+                >
+                    Fecha final
+                </label>
+
+                <input
+                    id="hasta"
+                    type="date"
+                    name="hasta"
+                    class="form-control"
+                    value="<?= e(
+                        $filters['date_to']
+                    ) ?>"
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <label
+                    for="centro_asignado"
+                    class="form-label"
+                >
+                    Centro asignado
+                </label>
+
+                <!--
+                    El centro se muestra bloqueado porque
+                    el coordinador no puede seleccionar otro.
+                -->
+                <input
+                    id="centro_asignado"
+                    type="text"
+                    class="form-control"
+                    value="<?= e(
+                        $assignedCenterName
+                    ) ?>"
+                    readonly
+                >
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-eco flex-grow-1"
+                    >
+                        <i class="bi bi-search me-2"></i>
+                        Consultar
+                    </button>
+
+                    <a
+                        href="<?= e(
+                            url('coordinador')
+                        ) ?>"
+                        class="btn btn-eco-outline"
+                        title="Limpiar filtros"
+                        aria-label="Limpiar filtros"
+                    >
+                        <i
+                            class="bi
+                                   bi-arrow-counterclockwise"
+                        ></i>
+                    </a>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<div
+    class="d-flex justify-content-between
+           align-items-center flex-wrap
+           gap-2 mb-3"
+>
+    <div>
+        <h2 class="h5 fw-bold mb-1">
+            Resultados del periodo
+        </h2>
+
+        <p class="text-muted-eco small mb-0">
+            <?= e($periodLabel) ?>
+            ·
+            <?= e($assignedCenterName) ?>
+        </p>
+    </div>
+
+    <span class="chip">
+        <i class="bi bi-building-lock me-1"></i>
+        Centro asignado
+    </span>
+</div>
+
+<?php
+/*
+ | Aquí preparo los indicadores filtrados
+ | correspondientes al centro asignado.
+ */
+$periodMetrics = [
+    [
+        'Cotizaciones del periodo',
+        $periodSummary[
+            'cotizaciones_periodo'
+        ],
+        'bi-receipt',
+        'Únicamente de mi centro',
+    ],
+    [
+        'Cotizaciones pendientes',
+        $periodSummary[
+            'cotizaciones_pendientes_periodo'
+        ],
+        'bi-hourglass-split',
+        'Requieren revisión',
+    ],
+    [
+        'Citas del periodo',
+        $periodSummary[
+            'citas_periodo'
+        ],
+        'bi-calendar3',
+        'Todos los estados',
+    ],
+    [
+        'Citas activas',
+        $periodSummary[
+            'citas_activas_periodo'
+        ],
+        'bi-calendar2-check-fill',
+        'Pendientes o confirmadas',
+    ],
+];
+?>
+
+<div class="row g-3 mb-4">
+
+    <?php foreach (
+        $periodMetrics
+        as [$label, $value, $icon, $meta]
+    ): ?>
+
+        <div class="col-6 col-xl-3">
+            <article
+                class="eco-card metric-card h-100"
+            >
+                <div class="metric-icon">
+                    <i
+                        class="bi <?= e($icon) ?>"
+                    ></i>
+                </div>
+
+                <div class="metric-value">
+                    <?= e($value) ?>
+                </div>
+
+                <div class="metric-label">
+                    <?= e($label) ?>
+                </div>
+
+                <div class="metric-meta">
+                    <?= e($meta) ?>
+                </div>
+            </article>
+        </div>
+
+    <?php endforeach; ?>
+
+</div>
+
+
+
+
 
 <div class="page-header">
 
