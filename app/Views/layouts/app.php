@@ -115,12 +115,25 @@ $navigation = menu_items();
         ) ?>"></script>
     <?php endif; ?>
 
-    <?php if (!empty($useGames)): ?>
-    <script src="<?= e(asset('js/games.js')) ?>"></script>
-    <?php endif; ?>
+<?php if (!empty($useGames)): ?>
+<script src="<?= e(asset('js/games.js')) ?>"></script>
+<?php endif; ?>
 
-    <script src="<?= e(asset('js/ecogestion.js')) ?>"></script>
+<?php if (!empty($useAppointments)): ?>
+<script src="<?= e(
+    asset('js/appointments.js')
+) ?>"></script>
+<?php endif; ?>
 
+<?php if (!empty($useCalendar)): ?>
+<script src="<?= e(
+    asset('js/calendar.js')
+) ?>"></script>
+<?php endif; ?>
+
+
+
+<script src="<?= e(asset('js/ecogestion.js')) ?>"></script>
 
 
 

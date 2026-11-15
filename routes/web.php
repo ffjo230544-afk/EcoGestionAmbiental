@@ -629,6 +629,81 @@ $router->post(
 
 
 /* ==========================================================
+   Citas ambientales
+   ========================================================== */
+
+/*
+ | Los tres roles pueden abrir el listado.
+ | El controlador aplica las restricciones:
+ |
+ | Administrador: todas las citas.
+ | Coordinador: citas de su centro.
+ | Ciudadano: solamente sus propias citas.
+ */
+$router->get(
+    'citas',
+    'CitaController',
+    'index',
+    $everyone
+);
+
+/* Formulario exclusivo del ciudadano. */
+$router->get(
+    'citas/crear',
+    'CitaController',
+    'create',
+    ['ciudadano']
+);
+
+$router->post(
+    'citas/guardar',
+    'CitaController',
+    'store',
+    ['ciudadano']
+);
+
+/*
+ | El administrador y coordinador
+ | pueden actualizar los estados.
+ */
+$router->post(
+    'citas/cambiar-estado',
+    'CitaController',
+    'changeStatus',
+    $operations
+);
+
+/* Cancelación exclusiva del propietario. */
+$router->post(
+    'citas/cancelar',
+    'CitaController',
+    'cancel',
+    ['ciudadano']
+);
+
+
+/* ==========================================================
+   Calendario de citas
+   ========================================================== */
+
+/*
+ | Los tres roles pueden abrir el calendario.
+ |
+ | El controlador se encarga de aplicar:
+ | - Administrador: todos o un centro.
+ | - Coordinador: solamente su centro.
+ | - Ciudadano: solamente sus propias citas.
+ */
+$router->get(
+    'calendario',
+    'CalendarioController',
+    'index',
+    $everyone
+);
+
+
+
+/* ==========================================================
    Juegos y actividades ambientales
    ========================================================== */
 
@@ -687,4 +762,60 @@ $router->get(
     'JuegoController',
     'decisions',
     $everyone
+);
+
+
+
+
+
+/* ==========================================================
+   Notificaciones internas
+   ========================================================== */
+
+/*
+ | Cada usuario consulta únicamente sus propias
+ | notificaciones. El controlador comprueba la propiedad.
+ */
+$router->get(
+    'notificaciones',
+    'NotificacionController',
+    'index',
+    $everyone
+);
+
+$router->post(
+    'notificaciones/leer',
+    'NotificacionController',
+    'read',
+    $everyone
+);
+
+$router->post(
+    'notificaciones/leer-todas',
+    'NotificacionController',
+    'readAll',
+    $everyone
+);
+
+
+/* ==========================================================
+   Reportes y exportaciones
+   ========================================================== */
+
+/*
+ | El administrador puede generar reportes globales.
+ | El coordinador queda restringido a su centro.
+ */
+$router->get(
+    'reportes',
+    'ReporteController',
+    'index',
+    $operations
+);
+
+$router->get(
+    'reportes/pdf',
+    'ReporteController',
+    'pdf',
+    $operations
 );

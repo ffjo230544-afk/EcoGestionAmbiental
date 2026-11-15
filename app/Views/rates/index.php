@@ -1,3 +1,23 @@
+<?php
+/*
+ | Aquí recupero el centro seleccionado en los filtros.
+ | Para el coordinador siempre será el centro
+ | que tiene asignado en su sesión.
+ */
+$selectedPointId = (int) (
+    $pointId
+    ?? auth_center_id()
+    ?? 0
+);
+
+$isCoordinator = has_role('coordinador');
+
+$assignedCenterName = (string) (
+    auth_user()['nombre_punto_asignado']
+    ?? 'Centro asignado'
+);
+?>
+
 <div class="page-header">
     <div>
         <span class="section-label">
@@ -9,8 +29,8 @@
         </h1>
 
         <p class="page-subtitle">
-            Administra precios, límites de peso
-            y periodos de vigencia.
+            Administra los precios, límites de peso
+            y periodos de vigencia de cada centro.
         </p>
     </div>
 
@@ -22,6 +42,20 @@
         Nueva tarifa
     </a>
 </div>
+
+<?php if ($isCoordinator): ?>
+
+    <div class="alert alert-light border mb-4">
+        <i class="bi bi-building text-eco me-2"></i>
+
+        Estás administrando únicamente las tarifas de:
+
+        <strong>
+            <?= e($assignedCenterName) ?>
+        </strong>
+    </div>
+
+<?php endif; ?>
 
 <section class="eco-card mb-4">
     <div class="eco-card-body">
@@ -36,7 +70,82 @@
                 value="tarifas"
             >
 
-            <div class="col-md-5">
+            <!-- Filtro por centro -->
+            <div class="col-md-4">
+                <label
+                    for="centro"
+                    class="form-label"
+                >
+                    Centro
+                </label>
+
+                <?php if ($isCoordinator): ?>
+
+                    <!--
+                     | El coordinador no puede consultar
+                     | las tarifas de otros centros.
+                     -->
+                    <input
+                        type="hidden"
+                        name="centro"
+                        value="<?= $selectedPointId ?>"
+                    >
+
+                    <div class="form-control bg-light">
+                        <i
+                            class="bi bi-building
+                                   text-eco me-2"
+                        ></i>
+
+                        <?= e($assignedCenterName) ?>
+                    </div>
+
+                <?php else: ?>
+
+                    <!--
+                     | El administrador puede filtrar
+                     | las tarifas de cualquier centro.
+                     -->
+                    <select
+                        id="centro"
+                        name="centro"
+                        class="form-select"
+                    >
+                        <option value="0">
+                            Todos los centros
+                        </option>
+
+                        <?php foreach (
+                            $centers as $center
+                        ): ?>
+
+                            <option
+                                value="<?= (int) $center[
+                                    'id_punto'
+                                ] ?>"
+                                <?= selected(
+                                    $selectedPointId,
+                                    $center['id_punto']
+                                ) ?>
+                            >
+                                <?= e($center['nombre']) ?>
+
+                                <?php if (
+                                    !empty($center['municipio'])
+                                ): ?>
+                                    —
+                                    <?= e($center['municipio']) ?>
+                                <?php endif; ?>
+                            </option>
+
+                        <?php endforeach; ?>
+                    </select>
+
+                <?php endif; ?>
+            </div>
+
+            <!-- Filtro por categoría -->
+            <div class="col-md-3">
                 <label
                     for="categoria"
                     class="form-label"
@@ -56,6 +165,7 @@
                     <?php foreach (
                         $categories as $category
                     ): ?>
+
                         <option
                             value="<?= (int) $category[
                                 'id_categoria'
@@ -67,11 +177,13 @@
                         >
                             <?= e($category['nombre']) ?>
                         </option>
+
                     <?php endforeach; ?>
                 </select>
             </div>
 
-            <div class="col-md-4">
+            <!-- Filtro por estado -->
+            <div class="col-md-3">
                 <label
                     for="estado"
                     class="form-label"
@@ -90,27 +202,34 @@
 
                     <option
                         value="activa"
-                        <?= selected($status, 'activa') ?>
+                        <?= selected(
+                            $status,
+                            'activa'
+                        ) ?>
                     >
                         Activa
                     </option>
 
                     <option
                         value="inactiva"
-                        <?= selected($status, 'inactiva') ?>
+                        <?= selected(
+                            $status,
+                            'inactiva'
+                        ) ?>
                     >
                         Inactiva
                     </option>
                 </select>
             </div>
 
-            <div class="col-md-3 d-grid">
+            <!-- Botón de búsqueda -->
+            <div class="col-md-2 d-grid">
                 <button
                     type="submit"
                     class="btn btn-eco-outline"
                 >
                     <i class="bi bi-search me-2"></i>
-                    Aplicar filtros
+                    Filtrar
                 </button>
             </div>
         </form>
@@ -123,6 +242,10 @@
         <?php foreach ($rates as $rate): ?>
 
             <?php
+            /*
+             | Aquí determino el estado visual
+             | de la tarifa según su vigencia.
+             */
             $today = date('Y-m-d');
 
             if ($rate['estado'] === 'inactiva') {
@@ -144,6 +267,11 @@
                 $periodClass = 'status-activa';
             }
 
+            /*
+             | Si la tarifa está inactiva,
+             | preparo el botón para activarla.
+             | De lo contrario, permito desactivarla.
+             */
             $activate =
                 $rate['estado'] !== 'activa';
 
@@ -181,10 +309,45 @@
                             </span>
                         </div>
 
+                        <!-- Centro relacionado con la tarifa -->
+                        <div class="mt-3">
+                            <div class="small text-muted-eco">
+                                Centro de atención
+                            </div>
+
+                            <div class="fw-semibold">
+                                <i
+                                    class="bi bi-building
+                                           text-eco me-2"
+                                ></i>
+
+                                <?= e(
+                                    $rate['centro']
+                                    ?? 'Centro no disponible'
+                                ) ?>
+                            </div>
+
+                            <?php if (
+                                !empty($rate['municipio'])
+                            ): ?>
+
+                                <div
+                                    class="small
+                                           text-muted-eco
+                                           ms-4"
+                                >
+                                    <?= e($rate['municipio']) ?>
+                                </div>
+
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Precios -->
                         <div class="row g-3 mt-2">
                             <div class="col-6">
                                 <div
-                                    class="small text-muted-eco"
+                                    class="small
+                                           text-muted-eco"
                                 >
                                     Precio por kilogramo
                                 </div>
@@ -198,7 +361,8 @@
 
                             <div class="col-6">
                                 <div
-                                    class="small text-muted-eco"
+                                    class="small
+                                           text-muted-eco"
                                 >
                                     Precio por pieza
                                 </div>
@@ -213,6 +377,7 @@
 
                         <hr>
 
+                        <!-- Límites de peso -->
                         <div class="small mb-2">
                             <i
                                 class="bi bi-box-seam
@@ -223,15 +388,18 @@
 
                             <?= $rate['minimo_kg'] !== null
                                 ? e($rate['minimo_kg'])
+                                    . ' kg'
                                 : 'Sin mínimo' ?>
 
                             –
 
                             <?= $rate['maximo_kg'] !== null
-                                ? e($rate['maximo_kg']) . ' kg'
+                                ? e($rate['maximo_kg'])
+                                    . ' kg'
                                 : 'Sin máximo' ?>
                         </div>
 
+                        <!-- Inicio de vigencia -->
                         <div class="small mb-2">
                             <i
                                 class="bi bi-calendar-event
@@ -245,6 +413,7 @@
                             )) ?>
                         </div>
 
+                        <!-- Final de vigencia -->
                         <div class="small mb-3">
                             <i
                                 class="bi bi-calendar-check
@@ -260,6 +429,7 @@
                                 : 'Sin fecha final' ?>
                         </div>
 
+                        <!-- Acciones -->
                         <div
                             class="d-flex flex-wrap
                                    gap-2 mt-auto"
@@ -333,23 +503,23 @@
 
     <section class="eco-card">
         <div class="p-5 text-center">
-            <i
-                class="bi bi-tags fs-1 text-eco"
-            ></i>
+            <i class="bi bi-tags fs-1 text-eco"></i>
 
             <h2 class="h5 mt-3">
                 No se encontraron tarifas
             </h2>
 
             <p class="text-muted-eco mb-3">
-                Modifica los filtros o registra
-                la primera tarifa.
+                No existen tarifas con los filtros
+                seleccionados o el centro todavía
+                no ha registrado ninguna.
             </p>
 
             <a
                 class="btn btn-eco"
                 href="<?= e(url('tarifas/crear')) ?>"
             >
+                <i class="bi bi-plus-lg me-2"></i>
                 Registrar tarifa
             </a>
         </div>

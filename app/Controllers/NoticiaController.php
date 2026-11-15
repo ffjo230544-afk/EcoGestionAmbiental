@@ -344,6 +344,53 @@ final class NoticiaController extends Controller
             throw $exception;
         }
 
+
+        /*
+ | Solamente notifico cuando el contenido
+ | quedó publicado, no cuando es borrador.
+ */
+if ($validated['estado'] === 'publicado') {
+    try {
+        (new Notificacion())
+            ->notifyAllActiveUsers(
+                [
+                    'id_publicacion' =>
+                        $publicationId,
+
+                    'tipo_notificacion' =>
+                        'nuevo_aviso',
+
+                    'titulo' =>
+                        'Nuevo contenido ambiental',
+
+                    'mensaje' =>
+                        'Se publicó: '
+                        . $validated['titulo']
+                        . '.',
+
+                    'medio' => 'interna',
+                ],
+
+                /*
+                 | No necesito notificar al autor
+                 | de la publicación que acaba de crear.
+                 */
+                (int) auth_user()['id_usuario']
+            );
+    } catch (Throwable) {
+        Security::audit(
+            'notificacion_no_generada',
+            [
+                'origen' =>
+                    'publicacion_creada',
+
+                'id_publicacion' =>
+                    $publicationId,
+            ]
+        );
+    }
+}
+
         $this->success(
             'La publicación se registró correctamente.',
             'noticias'
@@ -503,6 +550,50 @@ final class NoticiaController extends Controller
 
             throw $exception;
         }
+
+
+        /*
+ | Evito crear otra notificación cada vez que se edite
+ | una publicación que ya estaba publicada.
+ */
+$becamePublished =
+    $current['estado'] !== 'publicado'
+    && $validated['estado'] === 'publicado';
+
+if ($becamePublished) {
+    try {
+        (new Notificacion())
+            ->notifyAllActiveUsers(
+                [
+                    'id_publicacion' => $id,
+
+                    'tipo_notificacion' =>
+                        'nuevo_aviso',
+
+                    'titulo' =>
+                        'Nuevo contenido ambiental',
+
+                    'mensaje' =>
+                        'Se publicó: '
+                        . $validated['titulo']
+                        . '.',
+
+                    'medio' => 'interna',
+                ],
+                (int) auth_user()['id_usuario']
+            );
+    } catch (Throwable) {
+        Security::audit(
+            'notificacion_no_generada',
+            [
+                'origen' =>
+                    'publicacion_actualizada',
+
+                'id_publicacion' => $id,
+            ]
+        );
+    }
+}
 
         $this->success(
             'La publicación se actualizó correctamente.',

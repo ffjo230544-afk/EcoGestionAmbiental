@@ -20,22 +20,38 @@ final class Cotizacion extends Model
     ];
 
     /**
-     * Busca cotizaciones.
+     * Busca las cotizaciones aplicando los filtros
+     * correspondientes al usuario autenticado.
      *
-     * Cuando se proporciona un usuario, solamente
-     * devuelve los registros que le pertenecen.
+     * Cuando recibo un usuario, solamente devuelvo
+     * las cotizaciones que le pertenecen.
+     *
+     * Cuando recibo un centro, solamente devuelvo
+     * las cotizaciones dirigidas a ese centro.
      */
     public function search(
         string $search,
         string $status,
-        ?int $userId
+        ?int $userId,
+        ?int $pointId
     ): array {
         $conditions = [];
         $parameters = [];
 
+        /*
+         | Este filtro se utiliza para el ciudadano.
+         */
         if ($userId !== null) {
             $conditions[] = 'q.id_usuario = ?';
             $parameters[] = $userId;
+        }
+
+        /*
+         | Este filtro se utiliza para el coordinador.
+         */
+        if ($pointId !== null) {
+            $conditions[] = 'q.id_punto = ?';
+            $parameters[] = $pointId;
         }
 
         if (
@@ -74,26 +90,36 @@ final class Cotizacion extends Model
         }
 
         $where = $conditions !== []
-            ? ' WHERE ' . implode(' AND ', $conditions)
+            ? ' WHERE '
+                . implode(' AND ', $conditions)
             : '';
 
         return $this->rows(
             'SELECT
                 q.*,
+
                 u.nombre_completo AS ciudadano,
                 u.correo AS correo_ciudadano,
+
                 c.nombre AS categoria,
                 c.color_hex,
+
                 p.nombre AS centro,
                 p.municipio AS municipio_centro
+
              FROM cotizaciones AS q
+
              INNER JOIN usuarios AS u
                 ON u.id_usuario = q.id_usuario
+
              INNER JOIN categorias_residuos AS c
                 ON c.id_categoria = q.id_categoria
+
              LEFT JOIN puntos_atencion AS p
                 ON p.id_punto = q.id_punto'
+
             . $where
+
             . ' ORDER BY
                     q.fecha_cotizacion DESC,
                     q.id_cotizacion DESC',
@@ -103,7 +129,7 @@ final class Cotizacion extends Model
 
     /**
      * Busca una cotización comprobando que
-     * pertenezca al usuario indicado.
+     * pertenezca al ciudadano indicado.
      */
     public function findOwned(
         int $quoteId,

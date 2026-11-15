@@ -1,3 +1,21 @@
+<?php
+/*
+ | Obtengo la cantidad de notificaciones pendientes.
+ | Si el historial falla, la navegación puede continuar.
+ */
+$unreadNotifications = 0;
+
+try {
+    $unreadNotifications = (
+        new Notificacion()
+    )->unreadCount(
+        (int) $layoutUser['id_usuario']
+    );
+} catch (Throwable) {
+    $unreadNotifications = 0;
+}
+?>
+
 <header class="eco-topbar">
     <div class="d-flex align-items-center gap-3">
         <button
@@ -11,11 +29,16 @@
 
         <div>
             <strong class="d-block">
-                <?= e($pageTitle ?? $roleInterface['title']) ?>
+                <?= e(
+                    $pageTitle
+                    ?? $roleInterface['title']
+                ) ?>
             </strong>
 
             <span class="topbar-subtitle">
-                <?= e($roleInterface['subtitle']) ?>
+                <?= e(
+                    $roleInterface['subtitle']
+                ) ?>
             </span>
         </div>
     </div>
@@ -23,13 +46,26 @@
     <div class="topbar-actions">
         <a
             class="topbar-icon"
-            href="<?= e(
-                url(role_home())
-                . '#modulo-notificaciones'
-            ) ?>"
+            href="<?= e(url('notificaciones')) ?>"
             aria-label="Notificaciones"
+            title="<?= e(
+                $unreadNotifications > 0
+                    ? $unreadNotifications
+                        . ' notificación(es) pendiente(s)'
+                    : 'No tienes notificaciones pendientes'
+            ) ?>"
         >
             <i class="bi bi-bell"></i>
+
+            <?php if (
+                $unreadNotifications > 0
+            ): ?>
+            <span class="notification-count">
+                <?= $unreadNotifications > 99
+                    ? '99+'
+                    : (int) $unreadNotifications ?>
+            </span>
+            <?php endif; ?>
         </a>
 
         <span class="role-pill">
@@ -37,13 +73,18 @@
         </span>
 
         <span
-            class="topbar-profile-name fw-semibold small"
-            title="<?= e($layoutUser['correo']) ?>"
+            class="topbar-profile-name
+                   fw-semibold small"
+            title="<?= e(
+                $layoutUser['correo']
+            ) ?>"
         >
-            <?= e($layoutUser['nombre_completo']) ?>
+            <?= e(
+                $layoutUser['nombre_completo']
+            ) ?>
         </span>
 
-        <!-- El cierre continúa protegido mediante POST y CSRF. -->
+        <!-- Aquí cierro la sesión mediante POST y CSRF. -->
         <form
             action="<?= e(url('logout')) ?>"
             method="post"

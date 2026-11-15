@@ -9,6 +9,10 @@
     return;
   }
 
+  const center = form.querySelector(
+    "[data-quote-center]"
+  );
+
   const category = form.querySelector(
     "[data-quote-category]"
   );
@@ -23,10 +27,6 @@
 
   const quantityLabel = form.querySelector(
     "[data-quote-quantity-label]"
-  );
-
-  const center = form.querySelector(
-    "[data-quote-center]"
   );
 
   const unitPriceElement = form.querySelector(
@@ -49,59 +49,99 @@
     }
   );
 
-  const updateCenters = () => {
+  /*
+   | Guardo todas las opciones originales
+   | de categorías para filtrarlas por centro.
+   */
+  const categoryOptions = category
+    ? Array.from(category.options)
+    : [];
+
+  /**
+   * Coloca la estimación nuevamente en cero.
+   */
+  const resetAmounts = (message) => {
+    if (unitPriceElement) {
+      unitPriceElement.textContent =
+        currency.format(0);
+    }
+
+    if (totalElement) {
+      totalElement.textContent =
+        currency.format(0);
+    }
+
+    if (messageElement) {
+      messageElement.textContent = message;
+    }
+  };
+
+  /**
+   * Muestra únicamente las categorías que
+   * pertenecen al centro seleccionado.
+   */
+  const updateCategories = () => {
     if (!center || !category) {
       return;
     }
 
-    const categoryId = category.value;
+    const centerId = center.value;
 
-    Array.from(center.options).forEach(
+    categoryOptions.forEach(
       (option, index) => {
+        /*
+         | Mantengo visible la primera opción
+         | utilizada como mensaje inicial.
+         */
         if (index === 0) {
           option.hidden = false;
           option.disabled = false;
           return;
         }
 
-        const categories = (
-          option.dataset.categories || ""
-        )
-          .split(",")
-          .filter(Boolean);
-
         const available =
-          categoryId !== ""
-          && categories.includes(categoryId);
+          centerId !== ""
+          && option.dataset.centerId
+            === centerId;
 
         option.hidden = !available;
         option.disabled = !available;
       }
     );
 
-    if (center.selectedOptions[0]?.disabled) {
-      center.value = "0";
+    const selectedOption =
+      category.selectedOptions[0];
+
+    /*
+     | Si la categoría seleccionada no pertenece
+     | al nuevo centro, limpio la selección.
+     */
+    if (
+      selectedOption
+      && selectedOption.value !== ""
+      && selectedOption.disabled
+    ) {
+      category.value = "";
     }
+
+    category.disabled = centerId === "";
+
+    categoryOptions[0].textContent =
+      centerId === ""
+        ? "Primero selecciona un centro"
+        : "Selecciona un material";
   };
 
-  const updateCalculator = () => {
-    if (
-      !category
-      || !unit
-      || !quantity
-      || !unitPriceElement
-      || !totalElement
-      || !messageElement
-    ) {
+  /**
+   * Cambia las propiedades del campo de cantidad
+   * según se calcule por kilogramos o piezas.
+   */
+  const updateQuantityField = () => {
+    if (!unit || !quantity) {
       return;
     }
 
-    const selectedCategory =
-      category.selectedOptions[0];
-
-    const selectedUnit = unit.value;
-
-    if (selectedUnit === "pieza") {
+    if (unit.value === "pieza") {
       quantity.step = "1";
       quantity.min = "1";
       quantity.placeholder = "Ejemplo: 10";
@@ -110,35 +150,64 @@
         quantityLabel.textContent =
           "Cantidad de piezas *";
       }
-    } else {
-      quantity.step = "0.01";
-      quantity.min = "0.01";
-      quantity.placeholder = "Ejemplo: 5.50";
 
-      if (quantityLabel) {
-        quantityLabel.textContent =
-          "Peso en kilogramos *";
-      }
-    }
-
-    if (!selectedCategory?.value) {
-      unitPriceElement.textContent =
-        currency.format(0);
-
-      totalElement.textContent =
-        currency.format(0);
-
-      messageElement.textContent =
-        "Selecciona una categoría e ingresa una cantidad.";
-
-      updateCenters();
       return;
     }
 
+    quantity.step = "0.01";
+    quantity.min = "0.01";
+    quantity.placeholder = "Ejemplo: 5.50";
+
+    if (quantityLabel) {
+      quantityLabel.textContent =
+        "Peso en kilogramos *";
+    }
+  };
+
+  /**
+   * Calcula la estimación mostrada al ciudadano.
+   *
+   * Este cálculo solamente sirve para la interfaz.
+   * PHP vuelve a calcular el importe antes
+   * de guardar la cotización.
+   */
+  const updateCalculator = () => {
+    if (
+      !center
+      || !category
+      || !unit
+      || !quantity
+    ) {
+      return;
+    }
+
+    updateQuantityField();
+
+    if (center.value === "") {
+      resetAmounts(
+        "Selecciona primero un centro de compra."
+      );
+
+      return;
+    }
+
+    const selectedRate =
+      category.selectedOptions[0];
+
+    if (!selectedRate?.value) {
+      resetAmounts(
+        "Selecciona una categoría disponible."
+      );
+
+      return;
+    }
+
+    const selectedUnit = unit.value;
+
     const unitPrice = Number(
       selectedUnit === "kg"
-        ? selectedCategory.dataset.priceKg
-        : selectedCategory.dataset.pricePiece
+        ? selectedRate.dataset.priceKg
+        : selectedRate.dataset.pricePiece
     );
 
     const enteredQuantity = Number(
@@ -146,11 +215,11 @@
     );
 
     const minimum = Number(
-      selectedCategory.dataset.minimum
+      selectedRate.dataset.minimum
     );
 
     const maximum = Number(
-      selectedCategory.dataset.maximum
+      selectedRate.dataset.maximum
     );
 
     unitPriceElement.textContent =
@@ -164,15 +233,19 @@
       !Number.isFinite(unitPrice)
       || unitPrice <= 0
     ) {
-      totalElement.textContent =
-        currency.format(0);
+      resetAmounts(
+        "El centro no tiene precio disponible para la unidad seleccionada."
+      );
 
-      messageElement.textContent =
-        "Esta categoría no tiene precio disponible para la unidad seleccionada.";
-
-      updateCenters();
       return;
     }
+
+    /*
+     | Después de reiniciar el importe,
+     | vuelvo a mostrar el precio unitario.
+     */
+    unitPriceElement.textContent =
+      currency.format(unitPrice);
 
     if (
       !Number.isFinite(enteredQuantity)
@@ -184,7 +257,6 @@
       messageElement.textContent =
         "Ingresa una cantidad mayor que cero.";
 
-      updateCenters();
       return;
     }
 
@@ -198,7 +270,6 @@
       messageElement.textContent =
         "La cantidad de piezas debe ser un número entero.";
 
-      updateCenters();
       return;
     }
 
@@ -214,7 +285,6 @@
       messageElement.textContent =
         `El mínimo permitido es ${minimum} kg.`;
 
-      updateCenters();
       return;
     }
 
@@ -230,7 +300,6 @@
       messageElement.textContent =
         `El máximo permitido es ${maximum} kg.`;
 
-      updateCenters();
       return;
     }
 
@@ -242,11 +311,29 @@
 
     messageElement.textContent =
       selectedUnit === "kg"
-        ? `${enteredQuantity} kg × ${currency.format(unitPrice)}`
-        : `${enteredQuantity} pieza(s) × ${currency.format(unitPrice)}`;
-
-    updateCenters();
+        ? `${enteredQuantity} kg × ${currency.format(
+            unitPrice
+          )}`
+        : `${enteredQuantity} pieza(s) × ${currency.format(
+            unitPrice
+          )}`;
   };
+
+  /*
+   | Cuando cambia el centro, limpio la categoría
+   | anterior porque podría pertenecer a otro centro.
+   */
+  center?.addEventListener(
+    "change",
+    () => {
+      if (category) {
+        category.value = "";
+      }
+
+      updateCategories();
+      updateCalculator();
+    }
+  );
 
   category?.addEventListener(
     "change",
@@ -263,5 +350,11 @@
     updateCalculator
   );
 
+  /*
+   | Inicializo el formulario al cargar la página.
+   | Esto también recupera los datos anteriores
+   | cuando PHP devuelve una validación.
+   */
+  updateCategories();
   updateCalculator();
 })();

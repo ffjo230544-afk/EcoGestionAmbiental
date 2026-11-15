@@ -4,10 +4,50 @@ declare(strict_types=1);
 final class TarifaController extends Controller
 {
     /**
-     * Muestra las tarifas registradas.
+     * Aquí muestro las tarifas permitidas para
+     * el usuario autenticado.
      */
     public function index(): void
     {
+        $model = new ReglaCotizacion();
+
+        $isCoordinator = has_role(
+            'coordinador'
+        );
+
+        /*
+         | El administrador puede seleccionar un centro.
+         | El coordinador siempre utiliza el asignado
+         | en su sesión.
+         */
+        $pointId = $isCoordinator
+            ? (int) (auth_center_id() ?? 0)
+            : max(
+                0,
+                (int) ($_GET['centro'] ?? 0)
+            );
+
+        if (
+            $isCoordinator
+            && $pointId <= 0
+        ) {
+            deny_access();
+        }
+
+        /*
+         | Si el administrador escribió manualmente
+         | un centro inexistente, elimino el filtro.
+         */
+        if (
+            has_role('admin')
+            && $pointId > 0
+            && (new PuntoAtencion())->find(
+                $pointId
+            ) === null
+        ) {
+            $pointId = 0;
+        }
+
         $categoryId = max(
             0,
             (int) ($_GET['categoria'] ?? 0)
@@ -27,9 +67,13 @@ final class TarifaController extends Controller
             $status = '';
         }
 
-        $model = new ReglaCotizacion();
-
-        $categories = $model->availableCategories();
+        /*
+         | Las categorías del filtro también respetan
+         | el centro del coordinador.
+         */
+        $categories = $model->availableCategories(
+            $pointId
+        );
 
         $validCategoryIds = array_map(
             'intval',
@@ -51,6 +95,7 @@ final class TarifaController extends Controller
         }
 
         $rates = $model->search(
+            $pointId,
             $categoryId,
             $status
         );
@@ -60,17 +105,39 @@ final class TarifaController extends Controller
             [
                 'pageTitle' =>
                     'Tarifas de cotización',
+
                 'rates' => $rates,
+
                 'categories' => $categories,
+
+                /*
+                 | Solamente el administrador necesita
+                 | el catálogo completo de centros.
+                 */
+                'centers' => has_role('admin')
+                    ? $model->centersForFilter()
+                    : [],
+
+                'pointId' => $pointId,
+
+                'assignedCenterName' =>
+                    auth_user()[
+                        'nombre_punto_asignado'
+                    ] ?? null,
+
                 'categoryId' => $categoryId,
+
                 'status' => $status,
+
+                'canChooseCenter' =>
+                    has_role('admin'),
             ],
             'app'
         );
     }
 
     /**
-     * Muestra el formulario de registro.
+     * Aquí muestro el formulario de registro.
      */
     public function create(): void
     {
@@ -81,7 +148,7 @@ final class TarifaController extends Controller
     }
 
     /**
-     * Guarda una tarifa nueva.
+     * Aquí guardo una tarifa nueva.
      */
     public function store(): void
     {
@@ -98,6 +165,8 @@ final class TarifaController extends Controller
             'tarifa_creada',
             [
                 'id_regla' => $rateId,
+                'id_punto' =>
+                    $data['id_punto'],
                 'id_categoria' =>
                     $data['id_categoria'],
             ]
@@ -110,7 +179,7 @@ final class TarifaController extends Controller
     }
 
     /**
-     * Muestra el formulario de edición.
+     * Aquí muestro el formulario de edición.
      */
     public function edit(): void
     {
@@ -119,9 +188,9 @@ final class TarifaController extends Controller
             (int) ($_GET['id'] ?? 0)
         );
 
-        $record = (new ReglaCotizacion())->find(
-            $id
-        );
+        $record = (
+            new ReglaCotizacion()
+        )->findWithDetails($id);
 
         if ($record === null) {
             $this->failure(
@@ -130,6 +199,15 @@ final class TarifaController extends Controller
             );
         }
 
+        /*
+         | El administrador puede editar cualquier tarifa.
+         | El coordinador solamente puede editar las
+         | pertenecientes a su centro.
+         */
+        require_center_management(
+            (int) $record['id_punto']
+        );
+
         $this->form(
             $record,
             true
@@ -137,7 +215,7 @@ final class TarifaController extends Controller
     }
 
     /**
-     * Actualiza una tarifa existente.
+     * Aquí actualizo una tarifa existente.
      */
     public function update(): void
     {
@@ -148,17 +226,24 @@ final class TarifaController extends Controller
 
         $model = new ReglaCotizacion();
 
-        if ($model->find($id) === null) {
+        $current = $model->findWithDetails($id);
+
+        if ($current === null) {
             $this->failure(
                 'No se encontró la tarifa solicitada.',
                 'tarifas'
             );
         }
 
+        require_center_management(
+            (int) $current['id_punto']
+        );
+
         $data = $this->validated(
             $model,
             true,
-            $id
+            $id,
+            $current
         );
 
         $model->update(
@@ -168,7 +253,13 @@ final class TarifaController extends Controller
 
         Security::audit(
             'tarifa_actualizada',
-            ['id_regla' => $id]
+            [
+                'id_regla' => $id,
+                'id_punto' =>
+                    $data['id_punto'],
+                'id_categoria' =>
+                    $data['id_categoria'],
+            ]
         );
 
         $this->success(
@@ -178,7 +269,7 @@ final class TarifaController extends Controller
     }
 
     /**
-     * Activa o desactiva una tarifa.
+     * Aquí activo o desactivo una tarifa.
      */
     public function changeStatus(): void
     {
@@ -205,7 +296,8 @@ final class TarifaController extends Controller
         }
 
         $model = new ReglaCotizacion();
-        $record = $model->find($id);
+
+        $record = $model->findWithDetails($id);
 
         if ($record === null) {
             $this->failure(
@@ -214,25 +306,38 @@ final class TarifaController extends Controller
             );
         }
 
+        require_center_management(
+            (int) $record['id_punto']
+        );
+
+        /*
+         | Antes de activar vuelvo a comprobar
+         | el centro, la categoría y las fechas.
+         */
         if ($status === 'activa') {
+            $pointId = (int) (
+                $record['id_punto']
+            );
+
             $categoryId = (int) (
                 $record['id_categoria']
             );
 
             if (
-                !$model->categoryAvailable(
+                !$model->categoryAvailableForCenter(
+                    $pointId,
                     $categoryId
                 )
             ) {
                 $this->failure(
-                    'La categoría ya no está disponible '
-                    . 'para cotización.',
+                    'El centro ya no compra esta categoría.',
                     'tarifas'
                 );
             }
 
             if (
                 $model->hasOverlappingRate(
+                    $pointId,
                     $categoryId,
                     (string) $record[
                         'vigencia_inicio'
@@ -247,8 +352,8 @@ final class TarifaController extends Controller
             ) {
                 $this->failure(
                     'No se puede activar porque existe '
-                    . 'otra tarifa activa que coincide '
-                    . 'con ese periodo.',
+                    . 'otra tarifa del mismo centro que '
+                    . 'coincide con ese periodo.',
                     'tarifas'
                 );
             }
@@ -263,6 +368,8 @@ final class TarifaController extends Controller
             'tarifa_cambio_estado',
             [
                 'id_regla' => $id,
+                'id_punto' =>
+                    $record['id_punto'],
                 'estado' => $status,
             ]
         );
@@ -276,15 +383,74 @@ final class TarifaController extends Controller
     }
 
     /**
-     * Renderiza el formulario compartido.
+     * Aquí preparo el formulario compartido
+     * de registro y edición.
      */
     private function form(
         array $record,
         bool $editing
     ): void {
-        $categories = (
-            new ReglaCotizacion()
-        )->availableCategories();
+        $model = new ReglaCotizacion();
+
+        $isCoordinator = has_role(
+            'coordinador'
+        );
+
+        /*
+         | Durante la edición no permito trasladar
+         | una tarifa de un centro a otro.
+         */
+        if ($editing) {
+            $selectedPointId = (int) (
+                $record['id_punto'] ?? 0
+            );
+        } elseif ($isCoordinator) {
+            $selectedPointId = (int) (
+                auth_center_id() ?? 0
+            );
+        } else {
+            $selectedPointId = max(
+                0,
+                (int) old('id_punto', 0)
+            );
+        }
+
+        if (
+            $isCoordinator
+            && $selectedPointId <= 0
+        ) {
+            deny_access();
+        }
+
+        /*
+         | El administrador que registra necesita todas
+         | las categorías y la lista de centros donde
+         | cada una puede utilizarse.
+         */
+        if (
+            has_role('admin')
+            && !$editing
+        ) {
+            $categories =
+                $model->categoriesWithCenters();
+        } else {
+            $categories =
+                $model->availableCategories(
+                    $selectedPointId
+                );
+        }
+
+        $fixedCenterName = null;
+
+        if ($editing) {
+            $fixedCenterName =
+                $record['centro'] ?? null;
+        } elseif ($isCoordinator) {
+            $fixedCenterName =
+                auth_user()[
+                    'nombre_punto_asignado'
+                ] ?? null;
+        }
 
         $this->view(
             'rates/form',
@@ -292,21 +458,43 @@ final class TarifaController extends Controller
                 'pageTitle' => $editing
                     ? 'Editar tarifa'
                     : 'Registrar tarifa',
+
                 'record' => $record,
+
                 'editing' => $editing,
+
                 'categories' => $categories,
+
+                'centers' => (
+                    has_role('admin')
+                    && !$editing
+                )
+                    ? $model
+                        ->activePurchasingCenters()
+                    : [],
+
+                'selectedPointId' =>
+                    $selectedPointId,
+
+                'fixedCenterName' =>
+                    $fixedCenterName,
+
+                'canChooseCenter' =>
+                    has_role('admin')
+                    && !$editing,
             ],
             'app'
         );
     }
 
     /**
-     * Valida la información del formulario.
+     * Aquí valido todos los datos recibidos.
      */
     private function validated(
         ReglaCotizacion $model,
         bool $editing,
-        int $id = 0
+        int $id = 0,
+        array $current = []
     ): array {
         $back = $editing
             ? 'tarifas/editar'
@@ -316,19 +504,53 @@ final class TarifaController extends Controller
             ? ['id' => $id]
             : [];
 
+        /*
+         | Si estoy editando conservo el centro original.
+         | Esto impide cambiarlo modificando el HTML.
+         */
+        if ($editing) {
+            $pointId = (int) (
+                $current['id_punto'] ?? 0
+            );
+        } elseif (has_role('coordinador')) {
+            $pointId = (int) (
+                auth_center_id() ?? 0
+            );
+        } else {
+            $pointId = max(
+                0,
+                (int) ($_POST['id_punto'] ?? 0)
+            );
+        }
+
+        if ($pointId <= 0) {
+            $this->failure(
+                'Selecciona el centro al que pertenece la tarifa.',
+                $back,
+                $parameters
+            );
+        }
+
+        /*
+         | Esta comprobación protege al Coordinador
+         | aunque intente cambiar el centro desde HTML.
+         */
+        require_center_management($pointId);
+
         $categoryId = max(
             0,
             (int) ($_POST['id_categoria'] ?? 0)
         );
 
         if (
-            !$model->categoryAvailable(
+            !$model->categoryAvailableForCenter(
+                $pointId,
                 $categoryId
             )
         ) {
             $this->failure(
-                'Selecciona una categoría activa '
-                . 'y disponible para cotización.',
+                'Selecciona una categoría que el centro '
+                . 'tenga configurada para compra.',
                 $back,
                 $parameters
             );
@@ -351,8 +573,7 @@ final class TarifaController extends Controller
             || !is_numeric($pricePieceRaw)
         ) {
             $this->failure(
-                'Los precios deben contener '
-                . 'valores numéricos válidos.',
+                'Los precios deben contener valores numéricos.',
                 $back,
                 $parameters
             );
@@ -377,8 +598,7 @@ final class TarifaController extends Controller
             )
         ) {
             $this->failure(
-                'Registra al menos un precio mayor '
-                . 'que cero por kilogramo o por pieza.',
+                'Registra al menos un precio mayor que cero.',
                 $back,
                 $parameters
             );
@@ -389,8 +609,7 @@ final class TarifaController extends Controller
             || $pricePiece > 99999999.99
         ) {
             $this->failure(
-                'Uno de los precios supera '
-                . 'el valor permitido.',
+                'Uno de los precios supera el valor permitido.',
                 $back,
                 $parameters
             );
@@ -446,8 +665,8 @@ final class TarifaController extends Controller
             && $minimum > $maximum
         ) {
             $this->failure(
-                'El peso mínimo no puede ser '
-                . 'mayor que el peso máximo.',
+                'El peso mínimo no puede ser mayor '
+                . 'que el peso máximo.',
                 $back,
                 $parameters
             );
@@ -489,8 +708,8 @@ final class TarifaController extends Controller
             && $endDate < $startDate
         ) {
             $this->failure(
-                'La fecha final no puede ser '
-                . 'anterior a la fecha inicial.',
+                'La fecha final no puede ser anterior '
+                . 'a la fecha inicial.',
                 $back,
                 $parameters
             );
@@ -518,13 +737,10 @@ final class TarifaController extends Controller
             ? $endDate
             : null;
 
-        /*
-         | Una categoría no debe tener dos tarifas
-         | activas durante el mismo periodo.
-         */
         if (
             $status === 'activa'
             && $model->hasOverlappingRate(
+                $pointId,
                 $categoryId,
                 $startDate,
                 $normalizedEnd,
@@ -533,14 +749,14 @@ final class TarifaController extends Controller
         ) {
             $this->failure(
                 'Ya existe una tarifa activa para '
-                . 'esa categoría durante el periodo '
-                . 'seleccionado.',
+                . 'esa categoría, centro y periodo.',
                 $back,
                 $parameters
             );
         }
 
         return [
+            'id_punto' => $pointId,
             'id_categoria' => $categoryId,
             'precio_por_kg' => $priceKg,
             'precio_por_pieza' => $pricePiece,

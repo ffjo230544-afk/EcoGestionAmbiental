@@ -242,3 +242,85 @@ updateCoordinatorCenter();
 
 
 })();
+
+
+
+/*
+ | Aquí filtro las categorías del formulario de tarifas
+ | de acuerdo con el centro seleccionado.
+ */
+(() => {
+  "use strict";
+
+  const center = document.querySelector(
+    "[data-rate-center]"
+  );
+
+  const category = document.querySelector(
+    "[data-rate-category]"
+  );
+
+  /*
+   | Este código solamente se ejecuta cuando
+   | estoy registrando una tarifa como administrador.
+   */
+  if (!center || !category) {
+    return;
+  }
+
+  const updateRateCategories = () => {
+    const centerId = center.value;
+
+    Array.from(category.options).forEach(
+      (option, index) => {
+        /*
+         | La primera opción es la instrucción
+         | "Selecciona una categoría".
+         */
+        if (index === 0) {
+          option.hidden = false;
+          option.disabled = false;
+          return;
+        }
+
+        const allowedCenters = (
+          option.dataset.rateCenters || ""
+        )
+          .split(",")
+          .filter(Boolean);
+
+        const available =
+          centerId !== ""
+          && allowedCenters.includes(centerId);
+
+        option.hidden = !available;
+        option.disabled = !available;
+      }
+    );
+
+    /*
+     | Si cambio el centro y la categoría anterior
+     | ya no corresponde, limpio la selección.
+     */
+    const selectedOption =
+      category.selectedOptions[0];
+
+    if (
+      selectedOption
+      && selectedOption.disabled
+    ) {
+      category.value = "";
+    }
+  };
+
+  center.addEventListener(
+    "change",
+    updateRateCategories
+  );
+
+  /*
+   | También ejecuto el filtro cuando
+   | la página termina de abrirse.
+   */
+  updateRateCategories();
+})();

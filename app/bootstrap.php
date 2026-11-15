@@ -6,6 +6,20 @@ if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__DIR__));
 }
 
+
+/*
+ | Aquí cargo las librerías instaladas mediante Composer.
+ | Si todavía no existe la carpeta vendor, el resto
+ | de la aplicación puede continuar funcionando.
+ */
+$composerAutoload = ROOT_PATH
+    . '/vendor/autoload.php';
+
+if (is_file($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
+
 require_once ROOT_PATH . '/app/Core/helpers.php';
 
 /* Autoload: carga una clase cuando PHP encuentra su nombre por primera vez. */

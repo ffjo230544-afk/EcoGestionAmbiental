@@ -1,3 +1,65 @@
+<?php
+/*
+ | Aquí determino el centro que debe aparecer
+ | seleccionado dentro del formulario.
+ |
+ | Si estoy editando, utilizo el centro de la tarifa.
+ | Si soy coordinador, utilizo el centro de mi sesión.
+ */
+$selectedPointId = (int) old(
+    'id_punto',
+    $record['id_punto']
+        ?? auth_center_id()
+        ?? 0
+);
+
+/*
+ | Aquí compruebo si el usuario actual
+ | es un coordinador.
+ */
+$isCoordinator = has_role('coordinador');
+
+/*
+ | Busco el nombre del centro seleccionado
+ | para poder mostrarlo al coordinador.
+ */
+$selectedCenterName = '';
+
+foreach ($centers as $center) {
+    if (
+        (int) $center['id_punto']
+        === $selectedPointId
+    ) {
+        $selectedCenterName =
+            (string) $center['nombre'];
+
+        break;
+    }
+}
+
+/*
+ | Si el centro no apareció en el arreglo,
+ | utilizo el nombre almacenado en la sesión.
+ */
+if (
+    $selectedCenterName === ''
+    && $isCoordinator
+) {
+    $selectedCenterName = (string) (
+        auth_user()['nombre_punto_asignado']
+        ?? 'Centro asignado'
+    );
+}
+
+/*
+ | El formulario solamente podrá guardarse
+ | cuando existan centros y categorías disponibles.
+ */
+$formAvailable =
+    $centers !== []
+    && $categories !== [];
+?>
+
 <div class="page-header">
     <div>
         <span class="section-label">
@@ -11,8 +73,8 @@
         </h1>
 
         <p class="page-subtitle">
-            Define los precios y las condiciones
-            que utilizará el cotizador.
+            Define los precios que utilizará cada
+            centro para realizar sus cotizaciones.
         </p>
     </div>
 
@@ -25,14 +87,24 @@
     </a>
 </div>
 
-<?php if ($categories === []): ?>
+<?php if ($centers === []): ?>
 
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle me-2"></i>
 
-        No existen categorías activas disponibles
-        para cotización. Primero debes habilitar
-        una categoría desde el módulo de categorías.
+        No existen centros activos que compren
+        materiales. Primero debes configurar los
+        materiales aceptados por un centro.
+    </div>
+
+<?php elseif ($categories === []): ?>
+
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+
+        No existen categorías disponibles para
+        registrar tarifas. El centro debe tener por
+        lo menos una categoría marcada como Compra.
     </div>
 
 <?php endif; ?>
@@ -49,11 +121,13 @@
     <?= csrf_field() ?>
 
     <?php if ($editing): ?>
+
         <input
             type="hidden"
             name="id_regla"
             value="<?= (int) $record['id_regla'] ?>"
         >
+
     <?php endif; ?>
 
     <div class="eco-card-body">
@@ -63,12 +137,106 @@
                        text-eco me-2"
             ></i>
 
+            Cada centro puede manejar precios diferentes.
             Puedes registrar un precio por kilogramo,
             por pieza o ambos. Un precio en cero significa
             que esa modalidad no estará disponible.
         </div>
 
         <div class="row g-4">
+
+            <!-- Centro de atención -->
+            <div class="col-md-6">
+                <label
+                    for="id_punto"
+                    class="form-label"
+                >
+                    Centro de atención *
+                </label>
+
+                <?php if ($isCoordinator): ?>
+
+                    <!--
+                     | El coordinador no puede cambiar
+                     | el centro que tiene asignado.
+                     -->
+                    <input
+                        type="hidden"
+                        id="id_punto"
+                        name="id_punto"
+                        value="<?= $selectedPointId ?>"
+                        data-rate-center
+                    >
+
+                    <div
+                        class="form-control
+                               bg-light"
+                    >
+                        <i
+                            class="bi bi-building
+                                   text-eco me-2"
+                        ></i>
+
+                        <?= e($selectedCenterName) ?>
+                    </div>
+
+                    <div class="form-text">
+                        Este es el centro asignado
+                        a tu cuenta.
+                    </div>
+
+                <?php else: ?>
+
+                    <!--
+                     | El administrador puede seleccionar
+                     | cualquiera de los centros disponibles.
+                     -->
+                    <select
+                        id="id_punto"
+                        name="id_punto"
+                        class="form-select"
+                        data-rate-center
+                        required
+                    >
+                        <option value="">
+                            Selecciona un centro
+                        </option>
+
+                        <?php foreach (
+                            $centers as $center
+                        ): ?>
+
+                            <option
+                                value="<?= (int) $center[
+                                    'id_punto'
+                                ] ?>"
+                                <?= selected(
+                                    $selectedPointId,
+                                    $center['id_punto']
+                                ) ?>
+                            >
+                                <?= e($center['nombre']) ?>
+
+                                <?php if (
+                                    !empty($center['municipio'])
+                                ): ?>
+                                    —
+                                    <?= e($center['municipio']) ?>
+                                <?php endif; ?>
+                            </option>
+
+                        <?php endforeach; ?>
+                    </select>
+
+                    <div class="form-text">
+                        Selecciona el centro que utilizará
+                        esta tarifa.
+                    </div>
+
+                <?php endif; ?>
+            </div>
+
+            <!-- Categoría del residuo -->
             <div class="col-md-6">
                 <label
                     for="id_categoria"
@@ -81,6 +249,7 @@
                     id="id_categoria"
                     name="id_categoria"
                     class="form-select"
+                    data-rate-category
                     required
                 >
                     <option value="">
@@ -90,10 +259,14 @@
                     <?php foreach (
                         $categories as $category
                     ): ?>
+
                         <option
                             value="<?= (int) $category[
                                 'id_categoria'
                             ] ?>"
+                            data-rate-centers="<?= e(
+                                $category['centros'] ?? ''
+                            ) ?>"
                             <?= selected(
                                 old(
                                     'id_categoria',
@@ -105,10 +278,17 @@
                         >
                             <?= e($category['nombre']) ?>
                         </option>
+
                     <?php endforeach; ?>
                 </select>
+
+                <div class="form-text">
+                    Solamente puede utilizarse una categoría
+                    que el centro tenga marcada como Compra.
+                </div>
             </div>
 
+            <!-- Precio por kilogramo -->
             <div class="col-md-3">
                 <label
                     for="precio_por_kg"
@@ -144,6 +324,7 @@
                 </div>
             </div>
 
+            <!-- Precio por pieza -->
             <div class="col-md-3">
                 <label
                     for="precio_por_pieza"
@@ -179,6 +360,7 @@
                 </div>
             </div>
 
+            <!-- Peso mínimo -->
             <div class="col-md-3">
                 <label
                     for="minimo_kg"
@@ -209,6 +391,7 @@
                 </div>
             </div>
 
+            <!-- Peso máximo -->
             <div class="col-md-3">
                 <label
                     for="maximo_kg"
@@ -239,6 +422,7 @@
                 </div>
             </div>
 
+            <!-- Inicio de vigencia -->
             <div class="col-md-3">
                 <label
                     for="vigencia_inicio"
@@ -261,6 +445,7 @@
                 >
             </div>
 
+            <!-- Final de vigencia -->
             <div class="col-md-3">
                 <label
                     for="vigencia_fin"
@@ -282,10 +467,12 @@
                 >
 
                 <div class="form-text">
-                    Déjala vacía si no tendrá fecha final.
+                    Déjala vacía si la tarifa
+                    no tendrá una fecha final.
                 </div>
             </div>
 
+            <!-- Estado de la tarifa -->
             <div class="col-md-4">
                 <label
                     for="estado"
@@ -342,7 +529,7 @@
         <button
             type="submit"
             class="btn btn-eco"
-            <?= $categories === []
+            <?= !$formAvailable
                 ? 'disabled'
                 : '' ?>
         >

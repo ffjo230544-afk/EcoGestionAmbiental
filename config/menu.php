@@ -253,27 +253,71 @@ return [
         'coordinador',
     ],
 ],
-    [
-        'section' => 'Operación',
-        'label' => 'Gestión de citas',
-        'icon' => 'bi-calendar2-check-fill',
-        'target' => 'modulo-citas',
-        'roles' => ['admin', 'coordinador'],
+   [
+    'section' => 'Operación',
+    'label' => 'Gestión de citas',
+    'icon' => 'bi-calendar2-check-fill',
+
+    'route' => 'citas',
+
+    'match' => [
+        'citas',
     ],
-    [
-        'section' => 'Operación',
-        'label' => 'Calendario',
-        'icon' => 'bi-calendar3',
-        'target' => 'modulo-calendario',
-        'roles' => ['admin', 'coordinador'],
+
+    'target' => 'modulo-citas',
+
+    'roles' => [
+        'admin',
+        'coordinador',
     ],
-    [
-        'section' => 'Operación',
-        'label' => 'Reportes PDF',
-        'icon' => 'bi-file-earmark-pdf-fill',
-        'target' => 'modulo-reportes',
-        'roles' => ['admin', 'coordinador'],
+],
+
+
+
+   [
+    'section' => 'Operación',
+    'label' => 'Calendario',
+    'icon' => 'bi-calendar3',
+
+    'route' => 'calendario',
+
+    'match' => [
+        'calendario',
     ],
+
+    'target' => 'modulo-calendario',
+
+    'roles' => [
+        'admin',
+        'coordinador',
+    ],
+],
+
+
+
+[
+    'section' => 'Operación',
+    'label' => 'Reportes y exportaciones',
+    'icon' => 'bi-file-earmark-bar-graph-fill',
+
+    'route' => 'reportes',
+
+    'match' => [
+        'reportes',
+        'reportes/pdf',
+        'reportes/excel',
+    ],
+
+    'target' => 'modulo-reportes',
+
+    'roles' => [
+        'admin',
+        'coordinador',
+    ],
+],
+
+
+
 
  [
     'section' => 'Mis servicios',
@@ -301,20 +345,61 @@ return [
         'ciudadano',
     ],
 ],
-    [
-        'section' => 'Mis servicios',
-        'label' => 'Solicitar una cita',
-        'icon' => 'bi-calendar-plus-fill',
-        'target' => 'modulo-solicitar-cita',
-        'roles' => ['ciudadano'],
+   [
+    'section' => 'Mis servicios',
+    'label' => 'Solicitar una cita',
+    'icon' => 'bi-calendar-plus-fill',
+
+    'route' => 'citas/crear',
+
+    'match' => [
+        'citas/crear',
     ],
-    [
-        'section' => 'Mis servicios',
-        'label' => 'Mis citas',
-        'icon' => 'bi-calendar2-check-fill',
-        'target' => 'modulo-mis-citas',
-        'roles' => ['ciudadano'],
+
+    'target' => 'modulo-solicitar-cita',
+
+    'roles' => [
+        'ciudadano',
     ],
+],
+
+
+
+    [
+    'section' => 'Mis servicios',
+    'label' => 'Mis citas',
+    'icon' => 'bi-calendar2-check-fill',
+
+    'route' => 'citas',
+
+    'match' => [
+        'citas',
+    ],
+
+    'target' => 'modulo-mis-citas',
+
+    'roles' => [
+        'ciudadano',
+    ],
+],
+
+[
+    'section' => 'Mis servicios',
+    'label' => 'Mi calendario',
+    'icon' => 'bi-calendar3',
+
+    'route' => 'calendario',
+
+    'match' => [
+        'calendario',
+    ],
+
+    'target' => 'modulo-mi-calendario',
+
+    'roles' => [
+        'ciudadano',
+    ],
+],
 
     [
         'section' => 'Seguridad',
@@ -324,13 +409,27 @@ return [
         'roles' => ['admin'],
     ],
 
-    [
-        'section' => 'Mi cuenta',
-        'label' => 'Notificaciones',
-        'icon' => 'bi-bell-fill',
-        'target' => 'modulo-notificaciones',
-        'roles' => ['admin', 'coordinador', 'ciudadano'],
+  [
+    'section' => 'Mi cuenta',
+    'label' => 'Notificaciones',
+    'icon' => 'bi-bell-fill',
+
+    'route' => 'notificaciones',
+
+    'match' => [
+        'notificaciones',
     ],
+
+    'target' => 'modulo-notificaciones',
+
+    'roles' => [
+        'admin',
+        'coordinador',
+        'ciudadano',
+    ],
+],
+
+
     [
         'section' => 'Mi cuenta',
         'label' => 'Mi perfil',

@@ -125,6 +125,42 @@ final class UsuarioController extends Controller
                 $data['id_punto_asignado'],
         ]
     );
+    
+/*
+ | Creo un mensaje de bienvenida interno.
+ | No incluyo ni guardo la contraseña en la notificación.
+ */
+try {
+    (new Notificacion())->notifyUser(
+        $userId,
+        [
+            'tipo_notificacion' => 'sistema',
+
+            'titulo' =>
+                'Bienvenido a EcoGestión Ambiental',
+
+            'mensaje' =>
+                'Tu cuenta fue creada correctamente. '
+                . 'Ya puedes consultar los servicios '
+                . 'disponibles para tu rol.',
+
+            'medio' => 'interna',
+        ]
+    );
+} catch (Throwable) {
+    /*
+     | La creación de la cuenta no se revierte
+     | si falla solamente la notificación.
+     */
+    Security::audit(
+        'notificacion_no_generada',
+        [
+            'origen' => 'usuario_creado',
+            'id_usuario' => $userId,
+        ]
+    );
+}
+
         $this->success(
             'La cuenta se registró correctamente.',
             'usuarios'

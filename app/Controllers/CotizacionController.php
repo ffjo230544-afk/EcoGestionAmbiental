@@ -12,8 +12,8 @@ final class CotizacionController extends Controller
     ];
 
     /**
-     * Transiciones permitidas para administrador
-     * y coordinador.
+     * Aquí defino los cambios de estado
+     * permitidos para una cotización.
      */
     private const TRANSITIONS = [
         'pendiente' => [
@@ -33,10 +33,8 @@ final class CotizacionController extends Controller
     ];
 
     /**
-     * Muestra las cotizaciones.
-     *
-     * El ciudadano solamente obtiene sus registros.
-     * Los responsables pueden consultar todos.
+     * Muestra las cotizaciones correspondientes
+     * al usuario que inició sesión.
      */
     public function index(): void
     {
@@ -64,14 +62,41 @@ final class CotizacionController extends Controller
             'coordinador'
         );
 
-        $userId = $canManage
-            ? null
-            : (int) auth_user()['id_usuario'];
+        /*
+         | El ciudadano solamente consulta
+         | las cotizaciones creadas por él.
+         */
+        $userId = has_role('ciudadano')
+            ? (int) auth_user()['id_usuario']
+            : null;
+
+        /*
+         | El coordinador solamente consulta
+         | las cotizaciones de su centro.
+         |
+         | El administrador mantiene este valor
+         | en null para poder consultar todos.
+         */
+        $pointId = has_role('coordinador')
+            ? auth_center_id()
+            : null;
+
+        /*
+         | Mantengo esta comprobación como
+         | una segunda capa de protección.
+         */
+        if (
+            has_role('coordinador')
+            && $pointId === null
+        ) {
+            deny_access();
+        }
 
         $quotes = (new Cotizacion())->search(
             $search,
             $status,
-            $userId
+            $userId,
+            $pointId
         );
 
         $this->view(
@@ -80,13 +105,17 @@ final class CotizacionController extends Controller
                 'pageTitle' => $canManage
                     ? 'Gestión de cotizaciones'
                     : 'Mis cotizaciones',
+
                 'quotes' => $quotes,
                 'search' => $search,
                 'status' => $status,
+
                 'statusLabels' =>
                     self::STATUS_LABELS,
+
                 'transitions' =>
                     self::TRANSITIONS,
+
                 'canManage' => $canManage,
             ],
             'app'
@@ -94,25 +123,54 @@ final class CotizacionController extends Controller
     }
 
     /**
-     * Muestra el cotizador del ciudadano.
+     * Muestra el cotizador para el ciudadano.
      */
     public function create(): void
     {
+        /*
+         | Obtengo todas las tarifas vigentes.
+         | Cada registro ya incluye su centro.
+         */
         $rates = (
             new ReglaCotizacion()
         )->currentRates();
 
-        $centers = (
-            new PuntoAtencion()
-        )->quotationCenters();
+        /*
+         | Construyo el listado de centros a partir
+         | de las tarifas vigentes.
+         |
+         | De esta manera no muestro un centro
+         | que todavía no tenga precios configurados.
+         */
+        $centersById = [];
+
+        foreach ($rates as $rate) {
+            $pointId = (int) $rate['id_punto'];
+
+            if (isset($centersById[$pointId])) {
+                continue;
+            }
+
+            $centersById[$pointId] = [
+                'id_punto' => $pointId,
+                'nombre' => $rate['centro'],
+                'municipio' => $rate['municipio'],
+            ];
+        }
+
+        $centers = array_values(
+            $centersById
+        );
 
         $this->view(
             'quotes/create',
             [
                 'pageTitle' =>
                     'Cotizador de materiales',
+
                 'rates' => $rates,
                 'centers' => $centers,
+
                 'useQuoteCalculator' => true,
             ],
             'app'
@@ -124,6 +182,11 @@ final class CotizacionController extends Controller
      */
     public function store(): void
     {
+        $pointId = max(
+            0,
+            (int) ($_POST['id_punto'] ?? 0)
+        );
+
         $categoryId = max(
             0,
             (int) ($_POST['id_categoria'] ?? 0)
@@ -137,14 +200,28 @@ final class CotizacionController extends Controller
             (string) ($_POST['cantidad'] ?? '')
         );
 
-        $pointId = max(
-            0,
-            (int) ($_POST['id_punto'] ?? 0)
-        );
-
         $notes = trim(
             (string) ($_POST['observaciones'] ?? '')
         );
+
+        /*
+         | El centro ahora es obligatorio porque
+         | cada uno maneja sus propias tarifas.
+         */
+        if ($pointId <= 0) {
+            $this->failure(
+                'Selecciona el centro donde deseas '
+                . 'realizar la cotización.',
+                'cotizador'
+            );
+        }
+
+        if ($categoryId <= 0) {
+            $this->failure(
+                'Selecciona una categoría válida.',
+                'cotizador'
+            );
+        }
 
         if (
             !in_array(
@@ -159,14 +236,27 @@ final class CotizacionController extends Controller
             );
         }
 
+        /*
+         | Busco la tarifa utilizando el centro
+         | y la categoría al mismo tiempo.
+         *
+         | Este método también comprueba que:
+         | - El centro esté activo.
+         | - La categoría esté activa.
+         | - El centro compre la categoría.
+         | - La tarifa esté vigente.
+         */
         $rate = (
             new ReglaCotizacion()
-        )->currentRate($categoryId);
+        )->currentRate(
+            $pointId,
+            $categoryId
+        );
 
         if ($rate === null) {
             $this->failure(
-                'La categoría seleccionada no tiene '
-                . 'una tarifa vigente.',
+                'El centro seleccionado no tiene '
+                . 'una tarifa vigente para esa categoría.',
                 'cotizador'
             );
         }
@@ -186,6 +276,10 @@ final class CotizacionController extends Controller
         $unitPrice = 0.0;
         $calculationQuantity = 0.0;
 
+        /*
+         | Validación para una cotización
+         | calculada por kilogramos.
+         */
         if ($unit === 'kg') {
             $weight = round(
                 (float) $quantityRaw,
@@ -202,13 +296,15 @@ final class CotizacionController extends Controller
                 );
             }
 
-            $minimum = $rate['minimo_kg'] !== null
-                ? (float) $rate['minimo_kg']
-                : null;
+            $minimum =
+                $rate['minimo_kg'] !== null
+                    ? (float) $rate['minimo_kg']
+                    : null;
 
-            $maximum = $rate['maximo_kg'] !== null
-                ? (float) $rate['maximo_kg']
-                : null;
+            $maximum =
+                $rate['maximo_kg'] !== null
+                    ? (float) $rate['maximo_kg']
+                    : null;
 
             if (
                 $minimum !== null
@@ -239,6 +335,10 @@ final class CotizacionController extends Controller
             $calculationQuantity = $weight;
         }
 
+        /*
+         | Validación para una cotización
+         | calculada por piezas.
+         */
         if ($unit === 'pieza') {
             $validatedPieces = filter_var(
                 $quantityRaw,
@@ -270,27 +370,8 @@ final class CotizacionController extends Controller
 
         if ($unitPrice <= 0) {
             $this->failure(
-                'La categoría seleccionada no tiene '
-                . 'un precio vigente para esa unidad.',
-                'cotizador'
-            );
-        }
-
-        /*
-         | El centro es opcional. Si el ciudadano
-         | selecciona uno, confirmo que esté activo
-         | y que compre la categoría.
-         */
-        if (
-            $pointId > 0
-            && !(new PuntoAtencion())->acceptsPurchase(
-                $pointId,
-                $categoryId
-            )
-        ) {
-            $this->failure(
-                'El centro seleccionado no está '
-                . 'disponible para comprar esa categoría.',
+                'El centro seleccionado no tiene '
+                . 'un precio disponible para esa unidad.',
                 'cotizador'
             );
         }
@@ -304,8 +385,11 @@ final class CotizacionController extends Controller
         }
 
         /*
-         | El importe se calcula en PHP.
-         | Nunca confío en un total enviado por JavaScript.
+         | Calculo el importe nuevamente en PHP.
+         |
+         | No confío en el resultado mostrado
+         | por JavaScript porque puede manipularse
+         | desde el navegador.
          */
         $estimatedAmount = round(
             $unitPrice * $calculationQuantity,
@@ -318,9 +402,11 @@ final class CotizacionController extends Controller
 
             'id_categoria' => $categoryId,
 
-            'id_punto' => $pointId > 0
-                ? $pointId
-                : null,
+            /*
+             | Todas las cotizaciones nuevas
+             | quedan relacionadas con un centro.
+             */
+            'id_punto' => $pointId,
 
             'peso_kg' => $weight,
 
@@ -328,7 +414,7 @@ final class CotizacionController extends Controller
 
             /*
              | Guardo una copia del precio utilizado.
-             | Si la tarifa cambia mañana, esta
+             | Si la tarifa cambia después, esta
              | cotización conservará su precio original.
              */
             'precio_unitario' => $unitPrice,
@@ -347,12 +433,82 @@ final class CotizacionController extends Controller
             'cotizacion_creada',
             [
                 'id_cotizacion' => $quoteId,
+                'id_punto' => $pointId,
                 'id_categoria' => $categoryId,
                 'unidad' => $unit,
                 'monto_estimado' =>
                     $estimatedAmount,
             ]
         );
+
+
+        try {
+    $notificationModel = new Notificacion();
+
+    /*
+     | Confirmo al ciudadano que su solicitud
+     | quedó registrada.
+     */
+    $notificationModel->notifyUser(
+        (int) auth_user()['id_usuario'],
+        [
+            'id_cotizacion' => $quoteId,
+
+            'tipo_notificacion' =>
+                'actualizacion_cotizacion',
+
+            'titulo' =>
+                'Cotización registrada',
+
+            'mensaje' =>
+                'La cotización #'
+                . $quoteId
+                . ' fue registrada con un importe '
+                . 'estimado de '
+                . money($estimatedAmount)
+                . '.',
+
+            'medio' => 'interna',
+        ]
+    );
+
+    /*
+     | El administrador recibe todas.
+     | Solamente el coordinador del centro
+     | seleccionado recibe esta solicitud.
+     */
+    $notificationModel->notifyManagers(
+        $pointId > 0
+            ? $pointId
+            : null,
+        [
+            'id_cotizacion' => $quoteId,
+
+            'tipo_notificacion' =>
+                'actualizacion_cotizacion',
+
+            'titulo' =>
+                'Nueva cotización recibida',
+
+            'mensaje' =>
+                'Se registró la cotización #'
+                . $quoteId
+                . ' y necesita revisión.',
+
+            'medio' => 'interna',
+        ]
+    );
+} catch (Throwable) {
+    Security::audit(
+        'notificacion_no_generada',
+        [
+            'origen' => 'cotizacion_creada',
+            'id_cotizacion' => $quoteId,
+        ]
+    );
+}
+
+
 
         $this->success(
             'La cotización se registró correctamente. '
@@ -362,8 +518,8 @@ final class CotizacionController extends Controller
     }
 
     /**
-     * Administrador o coordinador actualizan
-     * el estado de una cotización.
+     * El administrador o el coordinador
+     * actualizan el estado de una cotización.
      */
     public function changeStatus(): void
     {
@@ -384,6 +540,34 @@ final class CotizacionController extends Controller
                 'No se encontró la cotización solicitada.',
                 'cotizaciones'
             );
+        }
+
+        /*
+         | Aunque el coordinador modificara manualmente
+         | el formulario, aquí vuelvo a comprobar
+         | que la cotización sea de su centro.
+         */
+        if (has_role('coordinador')) {
+            $assignedPointId = auth_center_id();
+
+            if (
+                $assignedPointId === null
+                || (int) $quote['id_punto']
+                    !== $assignedPointId
+            ) {
+                Security::audit(
+                    'cotizacion_centro_rechazada',
+                    [
+                        'id_cotizacion' => $quoteId,
+                        'id_punto_cotizacion' =>
+                            $quote['id_punto'],
+                        'id_punto_asignado' =>
+                            $assignedPointId,
+                    ]
+                );
+
+                deny_access();
+            }
         }
 
         $currentStatus = (string) (
@@ -417,10 +601,51 @@ final class CotizacionController extends Controller
             'cotizacion_actualizada',
             [
                 'id_cotizacion' => $quoteId,
+                'id_punto' => $quote['id_punto'],
                 'estado_anterior' => $currentStatus,
                 'estado_nuevo' => $newStatus,
             ]
         );
+
+
+    try {
+    $statusLabel = self::STATUS_LABELS[
+        $newStatus
+    ] ?? ucfirst($newStatus);
+
+    (new Notificacion())->notifyUser(
+        (int) $quote['id_usuario'],
+        [
+            'id_cotizacion' => $quoteId,
+
+            'tipo_notificacion' =>
+                'actualizacion_cotizacion',
+
+            'titulo' =>
+                'Tu cotización cambió de estado',
+
+            'mensaje' =>
+                'La cotización #'
+                . $quoteId
+                . ' ahora se encuentra en estado: '
+                . $statusLabel
+                . '.',
+
+            'medio' => 'interna',
+        ]
+    );
+} catch (Throwable) {
+    Security::audit(
+        'notificacion_no_generada',
+        [
+            'origen' =>
+                'cotizacion_actualizada',
+
+            'id_cotizacion' => $quoteId,
+        ]
+    );
+}
+
 
         $this->success(
             'El estado de la cotización '
@@ -446,9 +671,8 @@ final class CotizacionController extends Controller
         $model = new Cotizacion();
 
         /*
-         | No utilizo solamente el folio.
-         | También compruebo que pertenezca
-         | al ciudadano autenticado.
+         | Además del folio, compruebo que
+         | la cotización pertenezca al ciudadano.
          */
         $quote = $model->findOwned(
             $quoteId,
@@ -482,8 +706,47 @@ final class CotizacionController extends Controller
 
         Security::audit(
             'cotizacion_cancelada',
-            ['id_cotizacion' => $quoteId]
+            [
+                'id_cotizacion' => $quoteId,
+                'id_punto' => $quote['id_punto'],
+            ]
         );
+
+    try {
+    (new Notificacion())->notifyManagers(
+        (int) ($quote['id_punto'] ?? 0) > 0
+            ? (int) $quote['id_punto']
+            : null,
+        [
+            'id_cotizacion' => $quoteId,
+
+            'tipo_notificacion' =>
+                'actualizacion_cotizacion',
+
+            'titulo' =>
+                'Cotización cancelada',
+
+            'mensaje' =>
+                'El ciudadano canceló la '
+                . 'cotización #'
+                . $quoteId
+                . '.',
+
+            'medio' => 'interna',
+        ]
+    );
+} catch (Throwable) {
+    Security::audit(
+        'notificacion_no_generada',
+        [
+            'origen' =>
+                'cotizacion_cancelada',
+
+            'id_cotizacion' => $quoteId,
+        ]
+    );
+}
+
 
         $this->success(
             'La cotización se canceló correctamente.',
