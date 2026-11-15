@@ -9,7 +9,7 @@ return [
     'app_name' => 'EcoGestión Ambiental',
     'app_url' => '',   //cuando publique, aquí pondré la URL real del sistema
     'timezone' => 'America/Mexico_City',
-    'debug' => false,
+    'debug' => true,
 
     /*
      | Aquí configuro la duración de las sesiones.
