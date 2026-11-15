@@ -511,181 +511,223 @@
         </section>
     </div>
 
-    <div class="col-12">
-        <section class="eco-card">
-            <div class="eco-card-body">
-                <div class="report-icon mb-3">
-                    <i class="bi bi-calculator"></i>
+<div class="col-12">
+    <section class="eco-card">
+        <div class="eco-card-body">
+            <div class="report-icon mb-3">
+                <i class="bi bi-calculator"></i>
+            </div>
+
+            <h2 class="h4 fw-bold">
+                Cotizaciones por periodo
+            </h2>
+
+            <p class="text-muted-eco">
+                Genera el reporte de cotizaciones
+                en formato PDF o Excel.
+            </p>
+
+            <!--
+             | Utilizo la dirección principal porque
+             | cada botón enviará una ruta diferente.
+             -->
+            <form
+                action="<?= e(url()) ?>"
+                method="get"
+                class="row g-3 align-items-end"
+            >
+                <input
+                    type="hidden"
+                    name="tipo"
+                    value="cotizaciones"
+                >
+
+                <div class="col-md-3 col-xl-2">
+                    <label
+                        for="cotizacion-desde"
+                        class="form-label"
+                    >
+                        Desde
+                    </label>
+
+                    <input
+                        id="cotizacion-desde"
+                        type="date"
+                        name="desde"
+                        value="<?= e($defaultFrom) ?>"
+                        class="form-control"
+                    >
                 </div>
 
-                <h2 class="h4 fw-bold">
-                    Cotizaciones por periodo
-                </h2>
-
-                <p class="text-muted-eco">
-                    Genera un resumen de cotizaciones,
-                    importes y estados.
-                </p>
-
-                <form
-                    action="<?= e(url('reportes/pdf')) ?>"
-                    method="get"
-                    target="_blank"
-                    class="row g-3 align-items-end"
-                >
-                    <input
-                        type="hidden"
-                        name="ruta"
-                        value="reportes/pdf"
+                <div class="col-md-3 col-xl-2">
+                    <label
+                        for="cotizacion-hasta"
+                        class="form-label"
                     >
+                        Hasta
+                    </label>
 
                     <input
-                        type="hidden"
-                        name="tipo"
-                        value="cotizaciones"
+                        id="cotizacion-hasta"
+                        type="date"
+                        name="hasta"
+                        value="<?= e($defaultTo) ?>"
+                        class="form-control"
                     >
+                </div>
 
-                    <div class="col-md-3 col-xl-2">
-                        <label
-                            for="cotizacion-desde"
-                            class="form-label"
+                <?php if ($isAdmin): ?>
+
+                <div class="col-md-6 col-xl-3">
+                    <label
+                        for="cotizacion-centro"
+                        class="form-label"
+                    >
+                        Centro
+                    </label>
+
+                    <select
+                        id="cotizacion-centro"
+                        name="centro"
+                        class="form-select"
+                    >
+                        <option value="0">
+                            Todos
+                        </option>
+
+                        <?php foreach (
+                            $centers as $center
+                        ): ?>
+
+                        <option
+                            value="<?= (int) $center[
+                                'id_punto'
+                            ] ?>"
                         >
-                            Desde
-                        </label>
+                            <?= e($center['nombre']) ?>
+                        </option>
 
-                        <input
-                            id="cotizacion-desde"
-                            type="date"
-                            name="desde"
-                            value="<?= e($defaultFrom) ?>"
-                            class="form-control"
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <?php endif; ?>
+
+                <div class="col-md-6 col-xl">
+                    <label
+                        for="cotizacion-categoria"
+                        class="form-label"
+                    >
+                        Categoría
+                    </label>
+
+                    <select
+                        id="cotizacion-categoria"
+                        name="categoria"
+                        class="form-select"
+                    >
+                        <option value="0">
+                            Todas
+                        </option>
+
+                        <?php foreach (
+                            $categories as $category
+                        ): ?>
+
+                        <option
+                            value="<?= (int) $category[
+                                'id_categoria'
+                            ] ?>"
                         >
-                    </div>
+                            <?= e($category['nombre']) ?>
+                        </option>
 
-                    <div class="col-md-3 col-xl-2">
-                        <label
-                            for="cotizacion-hasta"
-                            class="form-label"
-                        >
-                            Hasta
-                        </label>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                        <input
-                            id="cotizacion-hasta"
-                            type="date"
-                            name="hasta"
-                            value="<?= e($defaultTo) ?>"
-                            class="form-control"
-                        >
-                    </div>
+                <div class="col-md-6 col-xl-2">
+                    <label
+                        for="cotizacion-estado"
+                        class="form-label"
+                    >
+                        Estado
+                    </label>
 
-                    <?php if ($isAdmin): ?>
-                    <div class="col-md-6 col-xl-3">
-                        <label
-                            for="cotizacion-centro"
-                            class="form-label"
-                        >
-                            Centro
-                        </label>
+                    <select
+                        id="cotizacion-estado"
+                        name="estado_cotizacion"
+                        class="form-select"
+                    >
+                        <option value="">
+                            Todos
+                        </option>
 
-                        <select
-                            id="cotizacion-centro"
-                            name="centro"
-                            class="form-select"
-                        >
-                            <option value="0">
-                                Todos
-                            </option>
+                        <option value="pendiente">
+                            Pendiente
+                        </option>
 
-                            <?php foreach ($centers as $center): ?>
-                            <option
-                                value="<?= (int) $center['id_punto'] ?>"
-                            >
-                                <?= e($center['nombre']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php endif; ?>
+                        <option value="revisada">
+                            Revisada
+                        </option>
 
-                    <div class="col-md-6 col-xl">
-                        <label
-                            for="cotizacion-categoria"
-                            class="form-label"
-                        >
-                            Categoría
-                        </label>
+                        <option value="aprobada">
+                            Aprobada
+                        </option>
 
-                        <select
-                            id="cotizacion-categoria"
-                            name="categoria"
-                            class="form-select"
-                        >
-                            <option value="0">
-                                Todas
-                            </option>
+                        <option value="rechazada">
+                            Rechazada
+                        </option>
 
-                            <?php foreach (
-                                $categories as $category
-                            ): ?>
-                            <option
-                                value="<?= (int) $category[
-                                    'id_categoria'
-                                ] ?>"
-                            >
-                                <?= e($category['nombre']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                        <option value="cancelada">
+                            Cancelada
+                        </option>
+                    </select>
+                </div>
 
-                    <div class="col-md-6 col-xl-2">
-                        <label
-                            for="cotizacion-estado"
-                            class="form-label"
-                        >
-                            Estado
-                        </label>
-
-                        <select
-                            id="cotizacion-estado"
-                            name="estado_cotizacion"
-                            class="form-select"
-                        >
-                            <option value="">
-                                Todos
-                            </option>
-                            <option value="pendiente">
-                                Pendiente
-                            </option>
-                            <option value="revisada">
-                                Revisada
-                            </option>
-                            <option value="aprobada">
-                                Aprobada
-                            </option>
-                            <option value="rechazada">
-                                Rechazada
-                            </option>
-                            <option value="cancelada">
-                                Cancelada
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-12 col-xl-auto d-grid">
+                <div class="col-12">
+                    <div
+                        class="d-grid d-md-flex
+                               justify-content-md-end gap-2"
+                    >
+                        <!--
+                         | Solamente el botón presionado
+                         | enviará su respectiva ruta.
+                         -->
                         <button
                             type="submit"
-                            class="btn btn-eco"
+                            name="ruta"
+                            value="reportes/pdf"
+                            formtarget="_blank"
+                            class="btn btn-eco-outline"
                         >
-                            <i class="bi bi-file-earmark-pdf me-2"></i>
+                            <i
+                                class="bi bi-file-earmark-pdf
+                                       me-2"
+                            ></i>
+
                             Generar PDF
                         </button>
+
+                        <button
+                            type="submit"
+                            name="ruta"
+                            value="reportes/excel"
+                            class="btn btn-eco"
+                        >
+                            <i
+                                class="bi bi-file-earmark-excel
+                                       me-2"
+                            ></i>
+
+                            Exportar Excel
+                        </button>
                     </div>
-                </form>
-            </div>
-        </section>
-    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
 
     <div class="col-12">
         <section class="eco-card">

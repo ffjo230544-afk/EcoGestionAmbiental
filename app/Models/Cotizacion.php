@@ -127,6 +127,55 @@ final class Cotizacion extends Model
         );
     }
 
+
+
+
+
+/**
+ * Obtengo una cotización con los datos del ciudadano,
+ * la categoría y el centro seleccionado.
+ */
+public function findDetailed(
+    int $quoteId
+): ?array {
+    return $this->row(
+        'SELECT
+            q.*,
+
+            u.nombre_completo AS ciudadano,
+            u.correo AS correo_ciudadano,
+
+            c.nombre AS categoria,
+            c.color_hex,
+
+            p.nombre AS centro,
+            p.municipio AS municipio_centro
+
+         FROM cotizaciones AS q
+
+         INNER JOIN usuarios AS u
+            ON u.id_usuario = q.id_usuario
+
+         INNER JOIN categorias_residuos AS c
+            ON c.id_categoria = q.id_categoria
+
+         LEFT JOIN puntos_atencion AS p
+            ON p.id_punto = q.id_punto
+
+         WHERE q.id_cotizacion = ?
+
+         LIMIT 1',
+        [$quoteId]
+    );
+}
+
+
+
+
+
+
+
+
     /**
      * Busca una cotización comprobando que
      * pertenezca al ciudadano indicado.

@@ -61,12 +61,12 @@
             color: #667c72;
             font-size: 9px;
         }
-
-        .date-cell {
-            width: 150px;
-            color: #667c72;
-            text-align: right;
-        }
+.date-cell {
+    width: 230px;
+    color: #667c72;
+    line-height: 1.6;
+    text-align: right;
+}
 
         .filters {
             width: 100%;
@@ -196,12 +196,19 @@
                 </p>
             </td>
 
-            <td class="date-cell">
-                Generado:
-                <strong>
-                    <?= e($generatedAt) ?>
-                </strong>
-            </td>
+         <td class="date-cell">
+    Generado por:
+    <strong>
+        <?= e($generatedBy) ?>
+    </strong>
+
+    <br>
+
+    Fecha:
+    <strong>
+        <?= e($generatedAt) ?>
+    </strong>
+</td>
         </tr>
     </table>
 

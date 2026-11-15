@@ -1,8 +1,25 @@
 <?php
 declare(strict_types=1);
 
+/**
+ *REPORTES PDF
+ */
 use Dompdf\Dompdf;
 use Dompdf\Options;
+
+
+
+/**
+ *REPORTES EXCEL
+ */
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 final class ReporteController extends Controller
 {
@@ -120,6 +137,27 @@ public function pdf(): void
     };
 }
 
+
+/**
+ * Aquí decido qué reporte se exportará
+ * como archivo de Excel.
+ */
+public function excel(): void
+{
+    $reportType = trim(
+        (string) ($_GET['tipo'] ?? '')
+    );
+
+    /*
+     | Por el momento la exportación requerida
+     | corresponde al reporte de cotizaciones.
+     */
+    if ($reportType !== 'cotizaciones') {
+        $this->invalidReport();
+    }
+
+    $this->quotesExcel();
+}
 
 
 
@@ -263,9 +301,9 @@ public function pdf(): void
             $status = '';
         }
 
-        $type = (string) (
-            $_GET['tipo_punto'] ?? ''
-        );
+      $type = (string) (
+    $_GET['tipo_centro'] ?? ''
+);
 
         if (
             !array_key_exists(
@@ -964,6 +1002,909 @@ private function quotesPdf(): never
     );
 }
 
+
+
+/**
+ * Aquí genero el reporte de cotizaciones
+ * en formato Excel.
+ */
+private function quotesExcel(): never
+{
+    $reportModel = new Reporte();
+
+    /*
+     | Reutilizo la misma validación de fechas
+     | que ya utilizan los reportes PDF.
+     */
+    [$dateFrom, $dateTo] =
+        $this->reportDateRange();
+
+    /*
+     | Si inició sesión un coordinador, este método
+     | siempre devuelve su centro asignado.
+     |
+     | Aunque modifique manualmente la URL, no podrá
+     | exportar información de otro centro.
+     */
+    $pointId = $this->reportCenterId();
+
+    $categoryId = max(
+        0,
+        (int) ($_GET['categoria'] ?? 0)
+    );
+
+    $status = trim(
+        (string) (
+            $_GET['estado_cotizacion'] ?? ''
+        )
+    );
+
+    $allowedStatuses = [
+        '',
+        'pendiente',
+        'revisada',
+        'aprobada',
+        'rechazada',
+        'cancelada',
+    ];
+
+    if (
+        !in_array(
+            $status,
+            $allowedStatuses,
+            true
+        )
+    ) {
+        $status = '';
+    }
+
+    /*
+     | Obtengo las cotizaciones utilizando
+     | los mismos filtros del reporte PDF.
+     */
+    $quotes = $reportModel->quotes(
+        $dateFrom,
+        $dateTo,
+        $pointId,
+        $categoryId,
+        $status
+    );
+
+    $statusLabels = [
+        'pendiente' => 'Pendiente',
+        'revisada' => 'Revisada',
+        'aprobada' => 'Aprobada',
+        'rechazada' => 'Rechazada',
+        'cancelada' => 'Cancelada',
+    ];
+
+    $generatedBy = (string) (
+        auth_user()['nombre_completo']
+        ?? 'Usuario del sistema'
+    );
+
+    $centerLabel = $this->centerLabel(
+        $pointId,
+        $reportModel
+    );
+
+    $categoryLabel = $this->categoryLabel(
+        $categoryId,
+        $reportModel
+    );
+
+    $statusLabel = $status === ''
+        ? 'Todos'
+        : (
+            $statusLabels[$status]
+            ?? ucfirst($status)
+        );
+
+    $totalAmount = 0.0;
+
+    /*
+     | Creo el libro y selecciono
+     | su primera hoja.
+     */
+    $spreadsheet = new Spreadsheet();
+
+    $sheet = $spreadsheet->getActiveSheet();
+
+    $sheet->setTitle('Cotizaciones');
+
+    /*
+     | Agrego propiedades que pueden consultarse
+     | desde la información del archivo.
+     */
+    $spreadsheet
+        ->getProperties()
+        ->setCreator($generatedBy)
+        ->setLastModifiedBy($generatedBy)
+        ->setTitle(
+            'Reporte de cotizaciones'
+        )
+        ->setSubject(
+            'Cotizaciones de EcoGestión Ambiental'
+        )
+        ->setDescription(
+            'Reporte generado desde '
+            . 'EcoGestión Ambiental.'
+        );
+
+    /*
+     | Esta función guarda texto de manera explícita.
+     | Así un valor que comience con =, +, - o @
+     | no será interpretado como fórmula de Excel.
+     */
+    $setText = static function (
+        string $cell,
+        mixed $value
+    ) use ($sheet): void {
+        $sheet->setCellValueExplicit(
+            $cell,
+            (string) ($value ?? ''),
+            DataType::TYPE_STRING
+        );
+    };
+
+    /* Título principal. */
+    $sheet->mergeCells('A1:L1');
+
+    $setText(
+        'A1',
+        'EcoGestión Ambiental — '
+        . 'Reporte de cotizaciones'
+    );
+
+    $sheet->mergeCells('A2:L2');
+
+    $setText(
+        'A2',
+        'Cotizaciones realizadas durante '
+        . 'el periodo seleccionado.'
+    );
+
+    /*
+     | Coloco quién generó el archivo
+     | y cuándo fue generado.
+     */
+    $sheet->mergeCells('A3:F3');
+    $sheet->mergeCells('G3:L3');
+
+    $setText(
+        'A3',
+        'Generado por: ' . $generatedBy
+    );
+
+    $setText(
+        'G3',
+        'Fecha de generación: '
+        . date('d/m/Y H:i')
+    );
+
+    /* Información de los filtros. */
+    $setText('A5', 'Periodo:');
+
+    $sheet->mergeCells('B5:F5');
+
+    $setText(
+        'B5',
+        $this->periodLabel(
+            $dateFrom,
+            $dateTo
+        )
+    );
+
+    $setText('G5', 'Centro:');
+
+    $sheet->mergeCells('H5:L5');
+
+    $setText('H5', $centerLabel);
+
+    $setText('A6', 'Categoría:');
+
+    $sheet->mergeCells('B6:F6');
+
+    $setText('B6', $categoryLabel);
+
+    $setText('G6', 'Estado:');
+
+    $sheet->mergeCells('H6:L6');
+
+    $setText('H6', $statusLabel);
+
+    $setText('A7', 'Registros:');
+
+    $sheet->mergeCells('B7:F7');
+
+    $sheet->setCellValue(
+        'B7',
+        count($quotes)
+    );
+
+    $setText('G7', 'Tipo de archivo:');
+
+    $sheet->mergeCells('H7:L7');
+
+    $setText(
+        'H7',
+        'Microsoft Excel (.xlsx)'
+    );
+
+    /*
+     | Encabezados de la tabla.
+     */
+    $headerRow = 9;
+
+    $headers = [
+        'A' => 'Folio',
+        'B' => 'Fecha',
+        'C' => 'Ciudadano',
+        'D' => 'Correo',
+        'E' => 'Centro',
+        'F' => 'Municipio',
+        'G' => 'Categoría',
+        'H' => 'Cantidad',
+        'I' => 'Unidad',
+        'J' => 'Precio unitario',
+        'K' => 'Monto estimado',
+        'L' => 'Estado',
+    ];
+
+    foreach (
+        $headers as $column => $label
+    ) {
+        $setText(
+            $column . $headerRow,
+            $label
+        );
+    }
+
+    /*
+     | Empiezo a colocar los registros
+     | después de los encabezados.
+     */
+    $currentRow = $headerRow + 1;
+
+    foreach ($quotes as $quote) {
+        $amount = (float) (
+            $quote['monto_estimado'] ?? 0
+        );
+
+        $totalAmount += $amount;
+
+        /*
+         | Una cotización puede registrar su cantidad
+         | mediante kilogramos o piezas.
+         */
+        if ($quote['peso_kg'] !== null) {
+            $quantity = (float) $quote['peso_kg'];
+            $unit = 'kg';
+        } else {
+            $quantity = (int) (
+                $quote['cantidad_piezas'] ?? 0
+            );
+
+            $unit = 'pieza(s)';
+        }
+
+        $setText(
+            'A' . $currentRow,
+            '#' . $quote['id_cotizacion']
+        );
+
+        /*
+         | La fecha se guarda como una fecha real
+         | para que Excel pueda ordenarla y filtrarla.
+         */
+        try {
+            $date = new DateTimeImmutable(
+                (string) $quote[
+                    'fecha_cotizacion'
+                ]
+            );
+
+            $sheet->setCellValue(
+                'B' . $currentRow,
+                ExcelDate::PHPToExcel($date)
+            );
+        } catch (Throwable) {
+            $setText(
+                'B' . $currentRow,
+                (string) $quote[
+                    'fecha_cotizacion'
+                ]
+            );
+        }
+
+        $setText(
+            'C' . $currentRow,
+            $quote['ciudadano']
+        );
+
+        $setText(
+            'D' . $currentRow,
+            $quote['correo_ciudadano']
+        );
+
+        $setText(
+            'E' . $currentRow,
+            $quote['centro']
+                ?: 'Sin centro'
+        );
+
+        $setText(
+            'F' . $currentRow,
+            $quote['municipio']
+                ?: 'No especificado'
+        );
+
+        $setText(
+            'G' . $currentRow,
+            $quote['categoria']
+        );
+
+        $sheet->setCellValue(
+            'H' . $currentRow,
+            $quantity
+        );
+
+        $setText(
+            'I' . $currentRow,
+            $unit
+        );
+
+        $sheet->setCellValue(
+            'J' . $currentRow,
+            (float) (
+                $quote['precio_unitario']
+                ?? 0
+            )
+        );
+
+        $sheet->setCellValue(
+            'K' . $currentRow,
+            $amount
+        );
+
+        $setText(
+            'L' . $currentRow,
+            $statusLabels[
+                $quote['estado']
+            ] ?? ucfirst(
+                (string) $quote['estado']
+            )
+        );
+
+        /*
+         | Alterno el color de las filas
+         | para facilitar la lectura.
+         */
+        if ($currentRow % 2 === 0) {
+            $sheet
+                ->getStyle(
+                    'A'
+                    . $currentRow
+                    . ':L'
+                    . $currentRow
+                )
+                ->getFill()
+                ->setFillType(
+                    Fill::FILL_SOLID
+                )
+                ->getStartColor()
+                ->setRGB('F2F8F4');
+        }
+
+        $currentRow++;
+    }
+
+    /*
+     | Si no existen resultados, dejo una explicación
+     | en lugar de una tabla aparentemente vacía.
+     */
+    if ($quotes === []) {
+        $sheet->mergeCells(
+            'A'
+            . $currentRow
+            . ':L'
+            . $currentRow
+        );
+
+        $setText(
+            'A' . $currentRow,
+            'No se encontraron cotizaciones '
+            . 'con los filtros seleccionados.'
+        );
+
+        $sheet
+            ->getStyle(
+                'A'
+                . $currentRow
+                . ':L'
+                . $currentRow
+            )
+            ->getAlignment()
+            ->setHorizontal(
+                Alignment::HORIZONTAL_CENTER
+            );
+
+        $currentRow++;
+    }
+
+    /*
+     | Agrego el monto total estimado al final.
+     */
+    $summaryRow = $currentRow + 1;
+
+    $sheet->mergeCells(
+        'A'
+        . $summaryRow
+        . ':J'
+        . $summaryRow
+    );
+
+    $sheet->mergeCells(
+        'K'
+        . $summaryRow
+        . ':L'
+        . $summaryRow
+    );
+
+    $setText(
+        'A' . $summaryRow,
+        'Monto estimado total'
+    );
+
+    $sheet->setCellValue(
+        'K' . $summaryRow,
+        $totalAmount
+    );
+
+    /*
+     | Diseño del encabezado principal.
+     */
+    $sheet
+        ->getStyle('A1:L1')
+        ->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 18,
+                'color' => [
+                    'rgb' => 'FFFFFF',
+                ],
+            ],
+
+            'fill' => [
+                'fillType' =>
+                    Fill::FILL_SOLID,
+
+                'startColor' => [
+                    'rgb' => '16803C',
+                ],
+            ],
+
+            'alignment' => [
+                'horizontal' =>
+                    Alignment::HORIZONTAL_CENTER,
+
+                'vertical' =>
+                    Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+    $sheet
+        ->getRowDimension(1)
+        ->setRowHeight(32);
+
+    $sheet
+        ->getStyle('A2:L2')
+        ->applyFromArray([
+            'font' => [
+                'italic' => true,
+                'color' => [
+                    'rgb' => '607168',
+                ],
+            ],
+
+            'alignment' => [
+                'horizontal' =>
+                    Alignment::HORIZONTAL_CENTER,
+            ],
+        ]);
+
+    $sheet
+        ->getStyle('A3:L3')
+        ->applyFromArray([
+            'font' => [
+                'size' => 10,
+                'color' => [
+                    'rgb' => '405249',
+                ],
+            ],
+
+            'alignment' => [
+                'horizontal' =>
+                    Alignment::HORIZONTAL_CENTER,
+            ],
+        ]);
+
+    /*
+     | Diseño del bloque de filtros.
+     */
+    $sheet
+        ->getStyle('A5:L7')
+        ->applyFromArray([
+            'fill' => [
+                'fillType' =>
+                    Fill::FILL_SOLID,
+
+                'startColor' => [
+                    'rgb' => 'F4F8F5',
+                ],
+            ],
+
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' =>
+                        Border::BORDER_THIN,
+
+                    'color' => [
+                        'rgb' => 'D8E5DC',
+                    ],
+                ],
+            ],
+        ]);
+
+    $sheet
+        ->getStyle('A5:A7')
+        ->getFont()
+        ->setBold(true);
+
+    $sheet
+        ->getStyle('G5:G7')
+        ->getFont()
+        ->setBold(true);
+
+    /*
+     | Diseño de los encabezados de la tabla.
+     */
+    $sheet
+        ->getStyle(
+            'A'
+            . $headerRow
+            . ':L'
+            . $headerRow
+        )
+        ->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => [
+                    'rgb' => 'FFFFFF',
+                ],
+            ],
+
+            'fill' => [
+                'fillType' =>
+                    Fill::FILL_SOLID,
+
+                'startColor' => [
+                    'rgb' => '1E6E3C',
+                ],
+            ],
+
+            'alignment' => [
+                'horizontal' =>
+                    Alignment::HORIZONTAL_CENTER,
+
+                'vertical' =>
+                    Alignment::VERTICAL_CENTER,
+
+                'wrapText' => true,
+            ],
+
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' =>
+                        Border::BORDER_THIN,
+
+                    'color' => [
+                        'rgb' => 'C8D8CD',
+                    ],
+                ],
+            ],
+        ]);
+
+    $sheet
+        ->getRowDimension($headerRow)
+        ->setRowHeight(30);
+
+    /*
+     | Diseño de los registros encontrados.
+     */
+    $lastDataRow = $quotes !== []
+        ? $currentRow - 1
+        : $headerRow;
+
+    if ($quotes !== []) {
+        $sheet
+            ->getStyle(
+                'A'
+                . ($headerRow + 1)
+                . ':L'
+                . $lastDataRow
+            )
+            ->applyFromArray([
+                'alignment' => [
+                    'vertical' =>
+                        Alignment::VERTICAL_CENTER,
+                ],
+
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' =>
+                            Border::BORDER_THIN,
+
+                        'color' => [
+                            'rgb' => 'DDE7E0',
+                        ],
+                    ],
+                ],
+            ]);
+
+        $sheet
+            ->getStyle(
+                'C'
+                . ($headerRow + 1)
+                . ':G'
+                . $lastDataRow
+            )
+            ->getAlignment()
+            ->setWrapText(true);
+
+        /*
+         | Formatos para fecha, cantidades
+         | y valores monetarios.
+         */
+        $sheet
+            ->getStyle(
+                'B'
+                . ($headerRow + 1)
+                . ':B'
+                . $lastDataRow
+            )
+            ->getNumberFormat()
+            ->setFormatCode(
+                'dd/mm/yyyy hh:mm'
+            );
+
+        $sheet
+            ->getStyle(
+                'H'
+                . ($headerRow + 1)
+                . ':H'
+                . $lastDataRow
+            )
+            ->getNumberFormat()
+            ->setFormatCode('0.00');
+
+        $sheet
+            ->getStyle(
+                'J'
+                . ($headerRow + 1)
+                . ':K'
+                . $lastDataRow
+            )
+            ->getNumberFormat()
+            ->setFormatCode(
+                '$#,##0.00'
+            );
+    }
+
+    /*
+     | Diseño del total final.
+     */
+    $sheet
+        ->getStyle(
+            'A'
+            . $summaryRow
+            . ':L'
+            . $summaryRow
+        )
+        ->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => [
+                    'rgb' => '173F27',
+                ],
+            ],
+
+            'fill' => [
+                'fillType' =>
+                    Fill::FILL_SOLID,
+
+                'startColor' => [
+                    'rgb' => 'DFF3E4',
+                ],
+            ],
+
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' =>
+                        Border::BORDER_THIN,
+
+                    'color' => [
+                        'rgb' => 'AFCFB8',
+                    ],
+                ],
+            ],
+
+            'alignment' => [
+                'vertical' =>
+                    Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+    $sheet
+        ->getStyle(
+            'A' . $summaryRow
+        )
+        ->getAlignment()
+        ->setHorizontal(
+            Alignment::HORIZONTAL_RIGHT
+        );
+
+    $sheet
+        ->getStyle(
+            'K' . $summaryRow
+        )
+        ->getNumberFormat()
+        ->setFormatCode('$#,##0.00');
+
+    /*
+     | Defino anchos adecuados para evitar
+     | que la información se vea amontonada.
+     */
+    $columnWidths = [
+        'A' => 12,
+        'B' => 20,
+        'C' => 28,
+        'D' => 31,
+        'E' => 28,
+        'F' => 20,
+        'G' => 24,
+        'H' => 14,
+        'I' => 13,
+        'J' => 18,
+        'K' => 18,
+        'L' => 16,
+    ];
+
+    foreach (
+        $columnWidths
+        as $column => $width
+    ) {
+        $sheet
+            ->getColumnDimension($column)
+            ->setWidth($width);
+    }
+
+    /*
+     | Mantengo visibles los encabezados
+     | cuando el usuario desplaza la hoja.
+     */
+    $sheet->freezePane(
+        'A' . ($headerRow + 1)
+    );
+
+    /*
+     | Excel permitirá filtrar cada columna.
+     */
+    $sheet->setAutoFilter(
+        'A'
+        . $headerRow
+        . ':L'
+        . $lastDataRow
+    );
+
+    /*
+     | Configuro la impresión horizontal
+     | por si después se imprime la hoja.
+     */
+    $sheet
+        ->getPageSetup()
+        ->setOrientation(
+            PageSetup::ORIENTATION_LANDSCAPE
+        );
+
+    $sheet
+        ->getPageSetup()
+        ->setFitToWidth(1);
+
+    $sheet
+        ->getPageSetup()
+        ->setFitToHeight(0);
+
+    $sheet
+        ->getPageMargins()
+        ->setTop(0.4);
+
+    $sheet
+        ->getPageMargins()
+        ->setBottom(0.4);
+
+    $sheet
+        ->getPageMargins()
+        ->setLeft(0.3);
+
+    $sheet
+        ->getPageMargins()
+        ->setRight(0.3);
+
+    /*
+     | Registro la exportación en la bitácora.
+     */
+    Security::audit(
+        'reporte_excel_cotizaciones',
+        [
+            'centro' => $pointId,
+            'categoria' => $categoryId,
+            'estado' => $status,
+            'desde' => $dateFrom,
+            'hasta' => $dateTo,
+            'registros' => count($quotes),
+        ]
+    );
+
+    $filename =
+        'reporte_cotizaciones_'
+        . date('Ymd_His')
+        . '.xlsx';
+
+    /*
+     | Elimino cualquier salida previa.
+     | Un espacio o advertencia antes del archivo
+     | podría provocar que Excel lo detecte dañado.
+     */
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    header(
+        'Content-Type: '
+        . 'application/vnd.openxmlformats-officedocument.'
+        . 'spreadsheetml.sheet'
+    );
+
+    header(
+        'Content-Disposition: attachment; filename="'
+        . $filename
+        . '"'
+    );
+
+    header('Cache-Control: max-age=0');
+    header('Pragma: public');
+    header('Expires: 0');
+
+    $writer = new Xlsx($spreadsheet);
+
+    $writer->save('php://output');
+
+    /*
+     | Libero la memoria utilizada por el libro
+     | después de terminar la descarga.
+     */
+    $spreadsheet->disconnectWorksheets();
+
+    exit;
+}
+
+
+
+
+
+
+
 /**
  * Genera el reporte de citas.
  */
@@ -1290,10 +2231,9 @@ private function periodLabel(
         . ' al '
         . date_mx($dateTo);
 }
-
 /**
  * Aquí preparo una vista general para los reportes
- * que utilizan tablas.
+ * que utilizan una tabla reutilizable.
  */
 private function tablePdf(
     string $title,
@@ -1304,26 +2244,53 @@ private function tablePdf(
     array $summary,
     string $filename
 ): never {
+    /*
+     | pdfView() ya agrega automáticamente la carpeta:
+     |
+     | app/Views/reports/pdf/
+     |
+     | Por eso solamente envío el nombre "table".
+     */
     $html = $this->pdfView(
-        'reports/pdf/table',
-        [
-            'title' => $title,
-            'subtitle' => $subtitle,
-            'columns' => $columns,
-            'rows' => $rows,
-            'filters' => $filters,
-            'summary' => $summary,
-            'logoData' => $this->logoData(),
-            'generatedAt' =>
-                date('d/m/Y H:i'),
-        ]
+        'table',
+       [
+    'title' => $title,
+    'subtitle' => $subtitle,
+    'columns' => $columns,
+    'rows' => $rows,
+    'filters' => $filters,
+    'summary' => $summary,
+
+    'logoData' =>
+        $this->logoData(),
+
+    /*
+     | Aquí identifico al usuario que solicitó
+     | la generación del documento.
+     */
+    'generatedBy' => (string) (
+        auth_user()['nombre_completo']
+        ?? 'Usuario del sistema'
+    ),
+
+    'generatedAt' =>
+        date('d/m/Y H:i'),
+]
     );
 
+    /*
+     | Estos reportes tienen varias columnas.
+     | Los genero en orientación horizontal para
+     | que la información no quede amontonada.
+     */
     $this->streamPdf(
         $html,
-        $filename
+        $filename,
+        'landscape'
     );
 }
+
+
 
 /**
  * Si los filtros son inválidos, regreso al módulo.

@@ -78,6 +78,22 @@
         </div>
     </div>
 
+
+
+<div class="text-end mb-3">
+    <a
+        href="<?= e(
+            url('recuperar-password')
+        ) ?>"
+        class="small"
+    >
+        ¿Olvidaste tu contraseña?
+    </a>
+</div>
+
+
+
+
     <button
         type="submit"
         class="btn btn-eco w-100 mt-2"

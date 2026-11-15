@@ -126,9 +126,91 @@ final class UsuarioController extends Controller
         ]
     );
     
+
+
+      
+
 /*
- | Creo un mensaje de bienvenida interno.
- | No incluyo ni guardo la contraseña en la notificación.
+ | Obtengo la información completa de la cuenta
+ | para personalizar el correo de bienvenida.
+ */
+$createdUser = $model->findWithRole(
+    $userId
+);
+
+$emailSent = false;
+
+if ($createdUser !== null) {
+    try {
+        $centerName = trim(
+            (string) (
+                $createdUser[
+                    'nombre_punto_asignado'
+                ] ?? ''
+            )
+        );
+
+        /*
+         | Envío la bienvenida al correo registrado.
+         | No envío la contraseña ni su hash.
+         */
+        (new Correo())->sendTransactional(
+            (string) $createdUser['correo'],
+            (string) $createdUser[
+                'nombre_completo'
+            ],
+            'Bienvenido a EcoGestión Ambiental',
+            'Tu cuenta fue creada',
+            'Tu cuenta quedó registrada correctamente '
+                . 'en EcoGestión Ambiental.',
+            [
+                'Nombre' =>
+                    $createdUser[
+                        'nombre_completo'
+                    ],
+
+                'Correo' =>
+                    $createdUser['correo'],
+
+                'Rol' =>
+                    $createdUser['nombre_rol'],
+
+                'Centro asignado' =>
+                    $centerName !== ''
+                        ? $centerName
+                        : 'No aplica',
+            ],
+            absolute_url('login'),
+            'Iniciar sesión'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | Mantengo activa la cuenta aunque el
+         | proveedor de correo no responda.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' =>
+                    'bienvenida_usuario',
+
+                'id_usuario' => $userId,
+            ]
+        );
+    }
+
+
+    $this->success(
+    'La cuenta se registró correctamente.',
+    'usuarios'
+);
+}
+
+/*
+ | También guardo la bienvenida dentro del sistema
+ | para que el usuario pueda verla en la campana.
  */
 try {
     (new Notificacion())->notifyUser(
@@ -144,13 +226,15 @@ try {
                 . 'Ya puedes consultar los servicios '
                 . 'disponibles para tu rol.',
 
-            'medio' => 'interna',
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
         ]
     );
 } catch (Throwable) {
     /*
-     | La creación de la cuenta no se revierte
-     | si falla solamente la notificación.
+     | La cuenta permanece creada aunque no pueda
+     | registrarse la notificación interna.
      */
     Security::audit(
         'notificacion_no_generada',
@@ -161,10 +245,9 @@ try {
     );
 }
 
-        $this->success(
-            'La cuenta se registró correctamente.',
-            'usuarios'
-        );
+
+
+
     }
 
     public function edit(): void

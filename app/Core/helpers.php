@@ -31,6 +31,90 @@ function url(string $route = '', array $parameters = []): string
     return base_url() . '/index.php' . ($query ? '?' . http_build_query($query) : '');
 }
 
+
+
+/**
+ * Construyo una dirección completa para utilizarla
+ * dentro de correos electrónicos.
+ */
+function absolute_url(
+    string $route = '',
+    array $parameters = []
+): string {
+    $query = $route !== ''
+        ? ['ruta' => trim($route, '/')]
+        : [];
+
+    $query = array_merge(
+        $query,
+        $parameters
+    );
+
+    $suffix = '/index.php'
+        . (
+            $query !== []
+                ? '?'
+                    . http_build_query($query)
+                : ''
+        );
+
+    /*
+     | Si configuré una dirección pública,
+     | la utilizo como base principal.
+     */
+    $configuredUrl = rtrim(
+        (string) config('app_url', ''),
+        '/'
+    );
+
+    if ($configuredUrl !== '') {
+        return $configuredUrl . $suffix;
+    }
+
+    /*
+     | Cuando trabajo localmente, construyo
+     | la dirección utilizando el servidor actual.
+     */
+    $usesHttps = (
+        !empty($_SERVER['HTTPS'])
+        && $_SERVER['HTTPS'] !== 'off'
+    ) || (
+        (int) ($_SERVER['SERVER_PORT'] ?? 0)
+        === 443
+    );
+
+    $scheme = $usesHttps
+        ? 'https'
+        : 'http';
+
+    $host = preg_replace(
+        '/[^A-Za-z0-9.\-:\[\]]/',
+        '',
+        (string) (
+            $_SERVER['HTTP_HOST']
+            ?? 'localhost'
+        )
+    );
+
+    if ($host === '') {
+        $host = 'localhost';
+    }
+
+    return $scheme
+        . '://'
+        . $host
+        . url(
+            $route,
+            $parameters
+        );
+}
+
+
+
+
+
+
+
 /** Construye la dirección de un CSS, JavaScript o imagen pública. */
 function asset(string $path): string
 {
@@ -100,14 +184,33 @@ function flash(string $key, mixed $value = null): mixed
  */
 function remember_input(array $input): void
 {
+    /*
+     | Nunca conservo contraseñas ni tokens
+     | después de una validación incorrecta.
+     */
     unset(
         $input['password'],
         $input['password_confirmacion'],
+
+        $input['password_actual'],
+        $input['password_nueva'],
+        $input['password_nueva_confirmacion'],
+
+        $input['password_confirmar_correo'],
+        $input['token_recuperacion'],
+
         $input['_csrf']
+
+        
     );
 
     $_SESSION['_old_input'] = $input;
 }
+
+
+
+
+
 
 /**
  * Recupera un valor anterior de manera segura.
@@ -376,6 +479,65 @@ function require_auth(): array
 
         redirect('login');
     }
+
+
+/*
+ | Compruebo que la sesión registrada en MySQL
+ | continúe activa.
+ |
+ | Esto permite cerrar otras sesiones cuando se
+ | cambia una contraseña o se detecta un problema
+ | de seguridad.
+ */
+$sessionRecord = (int) (
+    $_SESSION['registro_sesion'] ?? 0
+);
+
+if ($sessionRecord > 0) {
+    try {
+        $registeredSession = (
+            new SesionUsuario()
+        )->find($sessionRecord);
+
+        $sessionWasRevoked =
+            $registeredSession === null
+            || (int) $registeredSession[
+                'id_usuario'
+            ] !== (int) $user['id_usuario']
+            || (
+                $registeredSession['estado']
+                ?? ''
+            ) !== 'activa';
+
+        if ($sessionWasRevoked) {
+            Security::audit(
+                'sesion_cerrada_por_seguridad',
+                [
+                    'id_sesion' =>
+                        $sessionRecord,
+                ]
+            );
+
+            $_SESSION = [];
+
+            session_regenerate_id(true);
+
+            flash(
+                'error',
+                'Tu sesión fue cerrada por '
+                . 'seguridad. Inicia sesión nuevamente.'
+            );
+
+            redirect('login');
+        }
+    } catch (Throwable) {
+        /*
+         | Un problema temporal con el historial
+         | no debe detener toda la aplicación.
+         */
+    }
+}
+
 
     /*
      | Aquí calculo el tiempo transcurrido desde

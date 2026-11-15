@@ -571,12 +571,96 @@ final class CitaController extends Controller
         );
 
 
-        try {
+
+
+
+/*
+ | Consulto los datos relacionados con la cita
+ | para mostrarlos en el correo de confirmación.
+ */
+$appointmentDetails = (
+    new Cita()
+)->findDetailed(
+    $appointmentId
+);
+
+$emailSent = false;
+
+if ($appointmentDetails !== null) {
+    try {
+        /*
+         | Confirmo por correo que la solicitud
+         | fue recibida correctamente.
+         */
+        (new Correo())->sendTransactional(
+            (string) $appointmentDetails[
+                'correo_ciudadano'
+            ],
+            (string) $appointmentDetails[
+                'ciudadano'
+            ],
+            'Solicitud de cita #'
+                . $appointmentId,
+            'Recibimos tu solicitud de cita',
+            'La cita quedó registrada y se encuentra '
+                . 'pendiente de confirmación.',
+            [
+                'Folio' =>
+                    '#' . $appointmentId,
+
+                'Centro' =>
+                    $appointmentDetails[
+                        'centro'
+                    ],
+
+                'Fecha' => date_mx(
+                    $appointmentDetails[
+                        'fecha_cita'
+                    ]
+                ),
+
+                'Hora' => substr(
+                    (string) $appointmentDetails[
+                        'hora_cita'
+                    ],
+                    0,
+                    5
+                ),
+
+                'Motivo' =>
+                    $appointmentDetails[
+                        'motivo'
+                    ],
+
+                'Estado' =>
+                    'Pendiente de confirmación',
+            ],
+            absolute_url('citas'),
+            'Consultar mis citas'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | La cita permanece registrada aunque
+         | no pueda enviarse el correo.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' => 'cita_creada',
+                'id_cita' => $appointmentId,
+            ]
+        );
+    }
+}
+
+try {
     $notificationModel = new Notificacion();
 
     /*
-     | Confirmo al ciudadano que la solicitud
-     | ya se encuentra registrada.
+     | Confirmo al ciudadano dentro del sistema
+     | que la solicitud quedó registrada.
      */
     $notificationModel->notifyUser(
         (int) auth_user()['id_usuario'],
@@ -595,13 +679,15 @@ final class CitaController extends Controller
                 . ' fue registrada y está '
                 . 'pendiente de confirmación.',
 
-            'medio' => 'interna',
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
         ]
     );
 
     /*
-     | Solamente notifico al coordinador
-     | del centro seleccionado.
+     | Notifico al administrador y al coordinador
+     | responsable del centro seleccionado.
      */
     $notificationModel->notifyManagers(
         $pointId,
@@ -617,12 +703,16 @@ final class CitaController extends Controller
             'mensaje' =>
                 'Se registró la cita #'
                 . $appointmentId
-                . ' para tu centro.',
+                . ' para el centro correspondiente.',
 
             'medio' => 'interna',
         ]
     );
 } catch (Throwable) {
+    /*
+     | La cita permanece registrada aunque no pueda
+     | generarse alguna notificación interna.
+     */
     Security::audit(
         'notificacion_no_generada',
         [
@@ -631,6 +721,10 @@ final class CitaController extends Controller
         ]
     );
 }
+
+
+   
+
 
         $this->success(
             'La cita se registró correctamente '
@@ -761,22 +855,110 @@ final class CitaController extends Controller
             ]
         );
 
-        try {
-    $notificationType = match ($newStatus) {
-        'confirmada' =>
-            'confirmacion_cita',
+       
 
-        'cancelada' =>
-            'cancelacion_cita',
 
-        default =>
-            'cambio_cita',
-    };
 
-    $statusLabel = self::STATUS_LABELS[
-        $newStatus
-    ] ?? ucfirst($newStatus);
 
+
+$notificationType = match ($newStatus) {
+    'confirmada' =>
+        'confirmacion_cita',
+
+    'cancelada' =>
+        'cancelacion_cita',
+
+    default =>
+        'cambio_cita',
+};
+
+$statusLabel = self::STATUS_LABELS[
+    $newStatus
+] ?? ucfirst($newStatus);
+
+/*
+ | Vuelvo a consultar la cita después del cambio
+ | para obtener sus datos relacionados.
+ */
+$appointmentDetails =
+    $model->findDetailed(
+        $appointmentId
+    );
+
+$emailSent = false;
+
+if ($appointmentDetails !== null) {
+    try {
+        /*
+         | Informo al ciudadano sobre el nuevo
+         | estado de su cita.
+         */
+        (new Correo())->sendTransactional(
+            (string) $appointmentDetails[
+                'correo_ciudadano'
+            ],
+            (string) $appointmentDetails[
+                'ciudadano'
+            ],
+            'Actualización de la cita #'
+                . $appointmentId,
+            'Tu cita cambió de estado',
+            'Se actualizó el estado de tu cita '
+                . 'en EcoGestión Ambiental.',
+            [
+                'Folio' =>
+                    '#' . $appointmentId,
+
+                'Centro' =>
+                    $appointmentDetails[
+                        'centro'
+                    ],
+
+                'Fecha' => date_mx(
+                    $appointmentDetails[
+                        'fecha_cita'
+                    ]
+                ),
+
+                'Hora' => substr(
+                    (string) $appointmentDetails[
+                        'hora_cita'
+                    ],
+                    0,
+                    5
+                ),
+
+                'Estado actual' =>
+                    $statusLabel,
+            ],
+            absolute_url('citas'),
+            'Consultar mi cita'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | El cambio de estado permanece guardado
+         | aunque el correo no pueda enviarse.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' =>
+                    'cita_actualizada',
+
+                'id_cita' =>
+                    $appointmentId,
+            ]
+        );
+    }
+}
+
+try {
+    /*
+     | También registro el cambio dentro
+     | de la campana de notificaciones.
+     */
     (new Notificacion())->notifyUser(
         (int) $appointment['id_usuario'],
         [
@@ -795,19 +977,33 @@ final class CitaController extends Controller
                 . $statusLabel
                 . '.',
 
-            'medio' => 'interna',
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
         ]
     );
 } catch (Throwable) {
+    /*
+     | El estado de la cita permanece actualizado
+     | aunque falle la notificación interna.
+     */
     Security::audit(
         'notificacion_no_generada',
         [
-            'origen' => 'cita_actualizada',
-            'id_cita' => $appointmentId,
+            'origen' =>
+                'cita_actualizada',
+
+            'id_cita' =>
+                $appointmentId,
         ]
     );
 }
 
+
+
+
+
+        
 
 
         $this->success(
@@ -877,8 +1073,114 @@ final class CitaController extends Controller
 
 
 
-        try {
-    (new Notificacion())->notifyManagers(
+
+/*
+ | Obtengo la información completa para confirmar
+ | al ciudadano la cancelación de su cita.
+ */
+$appointmentDetails =
+    $model->findDetailed(
+        $appointmentId
+    );
+
+$emailSent = false;
+
+if ($appointmentDetails !== null) {
+    try {
+        (new Correo())->sendTransactional(
+            (string) $appointmentDetails[
+                'correo_ciudadano'
+            ],
+            (string) $appointmentDetails[
+                'ciudadano'
+            ],
+            'Cancelación de la cita #'
+                . $appointmentId,
+            'Tu cita fue cancelada',
+            'La cancelación de tu cita se registró '
+                . 'correctamente.',
+            [
+                'Folio' =>
+                    '#' . $appointmentId,
+
+                'Centro' =>
+                    $appointmentDetails[
+                        'centro'
+                    ],
+
+                'Fecha' => date_mx(
+                    $appointmentDetails[
+                        'fecha_cita'
+                    ]
+                ),
+
+                'Hora' => substr(
+                    (string) $appointmentDetails[
+                        'hora_cita'
+                    ],
+                    0,
+                    5
+                ),
+
+                'Estado' => 'Cancelada',
+            ],
+            absolute_url('citas'),
+            'Consultar mis citas'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | La cancelación permanece guardada aunque
+         | no pueda enviarse el correo.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' =>
+                    'cita_cancelada',
+
+                'id_cita' =>
+                    $appointmentId,
+            ]
+        );
+    }
+}
+
+try {
+    $notificationModel = new Notificacion();
+
+    /*
+     | Registro la cancelación en las
+     | notificaciones del ciudadano.
+     */
+    $notificationModel->notifyUser(
+        $userId,
+        [
+            'id_cita' => $appointmentId,
+
+            'tipo_notificacion' =>
+                'cancelacion_cita',
+
+            'titulo' =>
+                'Cita cancelada',
+
+            'mensaje' =>
+                'La cita #'
+                . $appointmentId
+                . ' fue cancelada correctamente.',
+
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
+        ]
+    );
+
+    /*
+     | Informo al administrador y al coordinador
+     | del centro sobre la cancelación.
+     */
+    $notificationModel->notifyManagers(
         (int) $appointment['id_punto'],
         [
             'id_cita' => $appointmentId,
@@ -898,6 +1200,10 @@ final class CitaController extends Controller
         ]
     );
 } catch (Throwable) {
+    /*
+     | La cancelación permanece guardada aunque
+     | falle alguna notificación interna.
+     */
     Security::audit(
         'notificacion_no_generada',
         [
@@ -906,6 +1212,8 @@ final class CitaController extends Controller
         ]
     );
 }
+
+
 
 
         $this->success(

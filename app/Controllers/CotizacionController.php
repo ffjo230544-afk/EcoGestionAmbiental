@@ -442,12 +442,123 @@ final class CotizacionController extends Controller
         );
 
 
-        try {
-    $notificationModel = new Notificacion();
+       
+
+/*
+ | Consulto la cotización completa para mostrar
+ | sus datos en el correo de confirmación.
+ */
+$quoteDetails = (
+    new Cotizacion()
+)->findDetailed(
+    $quoteId
+);
+
+$emailSent = false;
+
+if ($quoteDetails !== null) {
+    /*
+     | Muestro la cantidad utilizando la unidad
+     | con la que fue calculada la cotización.
+     */
+    if ($quoteDetails['peso_kg'] !== null) {
+        $quantityLabel = number_format(
+            (float) $quoteDetails['peso_kg'],
+            2,
+            '.',
+            ','
+        ) . ' kg';
+    } else {
+        $pieces = (int) (
+            $quoteDetails[
+                'cantidad_piezas'
+            ] ?? 0
+        );
+
+        $quantityLabel = $pieces
+            . (
+                $pieces === 1
+                    ? ' pieza'
+                    : ' piezas'
+            );
+    }
+
+    try {
+        /*
+         | Confirmo al ciudadano que su cotización
+         | fue registrada correctamente.
+         */
+        (new Correo())->sendTransactional(
+            (string) $quoteDetails[
+                'correo_ciudadano'
+            ],
+            (string) $quoteDetails[
+                'ciudadano'
+            ],
+            'Cotización registrada #'
+                . $quoteId,
+            'Recibimos tu cotización',
+            'La cotización quedó registrada '
+                . 'y se encuentra pendiente de revisión.',
+            [
+                'Folio' =>
+                    '#' . $quoteId,
+
+                'Centro' =>
+                    $quoteDetails['centro']
+                    ?? 'No especificado',
+
+                'Categoría' =>
+                    $quoteDetails['categoria'],
+
+                'Cantidad' =>
+                    $quantityLabel,
+
+                'Precio unitario' => money(
+                    $quoteDetails[
+                        'precio_unitario'
+                    ]
+                ),
+
+                'Importe estimado' => money(
+                    $quoteDetails[
+                        'monto_estimado'
+                    ]
+                ),
+
+                'Estado' =>
+                    'Pendiente',
+            ],
+            absolute_url('cotizaciones'),
+            'Consultar mis cotizaciones'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | La cotización permanece registrada aunque
+         | el correo no pueda enviarse.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' =>
+                    'cotizacion_creada',
+
+                'id_cotizacion' =>
+                    $quoteId,
+            ]
+        );
+    }
+}
+
+try {
+    $notificationModel =
+        new Notificacion();
 
     /*
-     | Confirmo al ciudadano que su solicitud
-     | quedó registrada.
+     | Confirmo al ciudadano dentro del sistema
+     | que su cotización quedó registrada.
      */
     $notificationModel->notifyUser(
         (int) auth_user()['id_usuario'],
@@ -468,19 +579,18 @@ final class CotizacionController extends Controller
                 . money($estimatedAmount)
                 . '.',
 
-            'medio' => 'interna',
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
         ]
     );
 
     /*
-     | El administrador recibe todas.
-     | Solamente el coordinador del centro
-     | seleccionado recibe esta solicitud.
+     | Notifico al administrador y al coordinador
+     | responsable del centro seleccionado.
      */
     $notificationModel->notifyManagers(
-        $pointId > 0
-            ? $pointId
-            : null,
+        $pointId,
         [
             'id_cotizacion' => $quoteId,
 
@@ -499,14 +609,23 @@ final class CotizacionController extends Controller
         ]
     );
 } catch (Throwable) {
+    /*
+     | La cotización permanece registrada aunque
+     | no pueda generarse alguna notificación.
+     */
     Security::audit(
         'notificacion_no_generada',
         [
-            'origen' => 'cotizacion_creada',
-            'id_cotizacion' => $quoteId,
+            'origen' =>
+                'cotizacion_creada',
+
+            'id_cotizacion' =>
+                $quoteId,
         ]
     );
 }
+
+
 
 
 
@@ -608,11 +727,98 @@ final class CotizacionController extends Controller
         );
 
 
-    try {
-    $statusLabel = self::STATUS_LABELS[
-        $newStatus
-    ] ?? ucfirst($newStatus);
+    
 
+
+
+$statusLabel = self::STATUS_LABELS[
+    $newStatus
+] ?? ucfirst($newStatus);
+
+/*
+ | Consulto nuevamente la cotización para obtener
+ | los datos del ciudadano, centro y categoría.
+ */
+$quoteDetails =
+    $model->findDetailed(
+        $quoteId
+    );
+
+$emailSent = false;
+
+if ($quoteDetails !== null) {
+    try {
+        /*
+         | Informo al ciudadano sobre el nuevo
+         | estado de su cotización.
+         */
+        (new Correo())->sendTransactional(
+            (string) $quoteDetails[
+                'correo_ciudadano'
+            ],
+            (string) $quoteDetails[
+                'ciudadano'
+            ],
+            'Actualización de la cotización #'
+                . $quoteId,
+            'Tu cotización cambió de estado',
+            'Se actualizó el estado de tu cotización '
+                . 'en EcoGestión Ambiental.',
+            [
+                'Folio' =>
+                    '#' . $quoteId,
+
+                'Centro' =>
+                    $quoteDetails['centro']
+                    ?? 'No especificado',
+
+                'Categoría' =>
+                    $quoteDetails['categoria'],
+
+                'Importe estimado' => money(
+                    $quoteDetails[
+                        'monto_estimado'
+                    ]
+                ),
+
+                'Estado anterior' =>
+                    self::STATUS_LABELS[
+                        $currentStatus
+                    ] ?? ucfirst(
+                        $currentStatus
+                    ),
+
+                'Estado actual' =>
+                    $statusLabel,
+            ],
+            absolute_url('cotizaciones'),
+            'Consultar mi cotización'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | El nuevo estado permanece guardado aunque
+         | el correo no pueda enviarse.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' =>
+                    'cotizacion_actualizada',
+
+                'id_cotizacion' =>
+                    $quoteId,
+            ]
+        );
+    }
+}
+
+try {
+    /*
+     | También registro el cambio dentro
+     | de la campana del ciudadano.
+     */
     (new Notificacion())->notifyUser(
         (int) $quote['id_usuario'],
         [
@@ -631,20 +837,32 @@ final class CotizacionController extends Controller
                 . $statusLabel
                 . '.',
 
-            'medio' => 'interna',
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
         ]
     );
 } catch (Throwable) {
+    /*
+     | El estado permanece actualizado aunque
+     | falle la notificación interna.
+     */
     Security::audit(
         'notificacion_no_generada',
         [
             'origen' =>
                 'cotizacion_actualizada',
 
-            'id_cotizacion' => $quoteId,
+            'id_cotizacion' =>
+                $quoteId,
         ]
     );
 }
+
+
+
+
+
 
 
         $this->success(
@@ -712,8 +930,117 @@ final class CotizacionController extends Controller
             ]
         );
 
+    
+
+
+
+/*
+ | Consulto los datos completos para confirmar
+ | al ciudadano la cancelación.
+ */
+$quoteDetails =
+    $model->findDetailed(
+        $quoteId
+    );
+
+$emailSent = false;
+
+if ($quoteDetails !== null) {
     try {
-    (new Notificacion())->notifyManagers(
+        /*
+         | Confirmo por correo que la cancelación
+         | fue registrada correctamente.
+         */
+        (new Correo())->sendTransactional(
+            (string) $quoteDetails[
+                'correo_ciudadano'
+            ],
+            (string) $quoteDetails[
+                'ciudadano'
+            ],
+            'Cancelación de la cotización #'
+                . $quoteId,
+            'Tu cotización fue cancelada',
+            'La cancelación de tu cotización '
+                . 'se registró correctamente.',
+            [
+                'Folio' =>
+                    '#' . $quoteId,
+
+                'Centro' =>
+                    $quoteDetails['centro']
+                    ?? 'No especificado',
+
+                'Categoría' =>
+                    $quoteDetails['categoria'],
+
+                'Importe estimado' => money(
+                    $quoteDetails[
+                        'monto_estimado'
+                    ]
+                ),
+
+                'Estado' =>
+                    'Cancelada',
+            ],
+            absolute_url('cotizaciones'),
+            'Consultar mis cotizaciones'
+        );
+
+        $emailSent = true;
+    } catch (Throwable) {
+        /*
+         | La cancelación permanece guardada aunque
+         | no pueda enviarse el correo.
+         */
+        Security::audit(
+            'correo_no_enviado',
+            [
+                'origen' =>
+                    'cotizacion_cancelada',
+
+                'id_cotizacion' =>
+                    $quoteId,
+            ]
+        );
+    }
+}
+
+try {
+    $notificationModel =
+        new Notificacion();
+
+    /*
+     | Registro la cancelación dentro de las
+     | notificaciones del ciudadano.
+     */
+    $notificationModel->notifyUser(
+        $userId,
+        [
+            'id_cotizacion' => $quoteId,
+
+            'tipo_notificacion' =>
+                'actualizacion_cotizacion',
+
+            'titulo' =>
+                'Cotización cancelada',
+
+            'mensaje' =>
+                'La cotización #'
+                . $quoteId
+                . ' fue cancelada correctamente.',
+
+            'medio' => $emailSent
+                ? 'interna_correo'
+                : 'interna',
+        ]
+    );
+
+    /*
+     | Informo al administrador y al coordinador
+     | responsable del centro.
+     */
+    $notificationModel->notifyManagers(
         (int) ($quote['id_punto'] ?? 0) > 0
             ? (int) $quote['id_punto']
             : null,
@@ -736,16 +1063,25 @@ final class CotizacionController extends Controller
         ]
     );
 } catch (Throwable) {
+    /*
+     | La cancelación permanece guardada aunque
+     | falle alguna notificación interna.
+     */
     Security::audit(
         'notificacion_no_generada',
         [
             'origen' =>
                 'cotizacion_cancelada',
 
-            'id_cotizacion' => $quoteId,
+            'id_cotizacion' =>
+                $quoteId,
         ]
     );
 }
+
+
+
+
 
 
         $this->success(

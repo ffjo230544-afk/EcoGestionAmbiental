@@ -194,7 +194,33 @@ $router->post(
     $centerEditors
 );
 
+/* ==========================================================
+   Recuperación de contraseña
+   ========================================================== */
 
+$router->get(
+    'recuperar-password',
+    'RecuperacionController',
+    'form'
+);
+
+$router->post(
+    'recuperar-password/enviar',
+    'RecuperacionController',
+    'send'
+);
+
+$router->get(
+    'restablecer-password',
+    'RecuperacionController',
+    'reset'
+);
+
+$router->post(
+    'restablecer-password/guardar',
+    'RecuperacionController',
+    'update'
+);
 
 
 
@@ -818,4 +844,48 @@ $router->get(
     'ReporteController',
     'pdf',
     $operations
+);
+
+/*
+ | Esta ruta descarga las exportaciones
+ | creadas mediante PhpSpreadsheet.
+ */
+$router->get(
+    'reportes/excel',
+    'ReporteController',
+    'excel',
+    $operations
+);
+
+
+
+
+
+/* ==========================================================
+   Mi perfil
+   ========================================================== */
+
+/*
+ | Cualquier usuario autenticado puede consultar
+ | y actualizar solamente su propia cuenta.
+ */
+$router->get(
+    'perfil',
+    'PerfilController',
+    'index',
+    $everyone
+);
+
+$router->post(
+    'perfil/actualizar',
+    'PerfilController',
+    'update',
+    $everyone
+);
+
+$router->post(
+    'perfil/cambiar-password',
+    'PerfilController',
+    'changePassword',
+    $everyone
 );

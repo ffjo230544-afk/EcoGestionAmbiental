@@ -294,6 +294,47 @@ final class Cita extends Model
         ) > 0;
     }
 
+
+/**
+ * Obtengo una cita con los datos del ciudadano
+ * y del centro donde será atendida.
+ */
+public function findDetailed(
+    int $appointmentId
+): ?array {
+    return $this->row(
+        'SELECT
+            ci.*,
+
+            u.nombre_completo AS ciudadano,
+            u.correo AS correo_ciudadano,
+            u.telefono AS telefono_ciudadano,
+
+            p.nombre AS centro,
+            p.direccion AS direccion_centro,
+            p.municipio AS municipio_centro
+
+         FROM citas AS ci
+
+         INNER JOIN usuarios AS u
+            ON u.id_usuario = ci.id_usuario
+
+         INNER JOIN puntos_atencion AS p
+            ON p.id_punto = ci.id_punto
+
+         WHERE ci.id_cita = ?
+
+         LIMIT 1',
+        [$appointmentId]
+    );
+}
+
+
+
+
+
+
+
     /**
      * Busca una cita comprobando que pertenezca
      * al ciudadano indicado.
@@ -317,6 +358,13 @@ final class Cita extends Model
             ]
         );
     }
+
+
+
+
+
+
+
     /**
  * Obtiene las citas que serán mostradas
  * dentro del calendario.

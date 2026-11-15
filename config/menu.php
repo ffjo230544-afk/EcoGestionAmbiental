@@ -430,13 +430,27 @@ return [
 ],
 
 
-    [
-        'section' => 'Mi cuenta',
-        'label' => 'Mi perfil',
-        'icon' => 'bi-person-circle',
-        'target' => 'modulo-perfil',
-        'roles' => ['admin', 'coordinador', 'ciudadano'],
+   [
+    'section' => 'Mi cuenta',
+    'label' => 'Mi perfil',
+    'icon' => 'bi-person-circle',
+
+    'route' => 'perfil',
+
+    'match' => [
+        'perfil',
+        'perfil/actualizar',
+        'perfil/cambiar-password',
     ],
+
+    'target' => 'modulo-perfil',
+
+    'roles' => [
+        'admin',
+        'coordinador',
+        'ciudadano',
+    ],
+],
 
 
 
