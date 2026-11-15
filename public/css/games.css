@@ -3345,3 +3345,126 @@
 
 
 
+/* =========================================================
+   Editor de juegos
+   ========================================================= */
+
+.game-editor-category {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid #dce8df;
+    border-radius: 18px;
+    background: #f8fcf9;
+}
+
+.game-editor-category-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 15px;
+    color: #16803c;
+    background: #dff5e6;
+    font-size: 1.35rem;
+}
+
+.game-editor-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.game-editor-row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid #dce8df;
+    border-radius: 20px;
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f8fcf9 100%
+        );
+    box-shadow: 0 8px 25px rgba(25, 65, 42, 0.06);
+}
+
+.game-editor-row-number {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 14px;
+    color: #ffffff;
+    background: #16803c;
+    font-weight: 800;
+}
+
+.game-editor-remove {
+    flex: 0 0 auto;
+}
+
+.game-editor-question {
+    padding-top: 1.5rem;
+}
+
+.game-editor-save {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #cfe3d5;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 15px 40px rgba(20, 56, 35, 0.15);
+    backdrop-filter: blur(12px);
+}
+
+.game-editor-save div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.game-editor-save span {
+    color: #63756a;
+    font-size: 0.88rem;
+}
+
+@media (max-width: 767.98px) {
+    .game-editor-row {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+    }
+
+    .game-editor-row .row {
+        grid-column: 1 / -1;
+    }
+
+    .game-editor-remove {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .game-editor-save {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .game-editor-save .btn {
+        width: 100%;
+    }
+}
+
+

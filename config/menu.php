@@ -202,14 +202,15 @@ return [
     'icon' => 'bi-controller',
     'route' => 'juegos',
     'match' => [
-        'juegos',
-        'juegos/clasificar',
-        'juegos/trivia',
-        'juegos/memorama',
-        'juegos/limpia-parque',
-        'juegos/ruta-reciclaje',
-        'juegos/decisiones',
-    ],
+    'juegos',
+    'juegos/editar',
+    'juegos/clasificar',
+    'juegos/trivia',
+    'juegos/memorama',
+    'juegos/limpia-parque',
+    'juegos/ruta-reciclaje',
+    'juegos/decisiones',
+],
     'target' => 'modulo-actividades',
     'roles' => [
         'admin',
@@ -401,13 +402,26 @@ return [
     ],
 ],
 
-    [
-        'section' => 'Seguridad',
-        'label' => 'Respaldo y restauración',
-        'icon' => 'bi-database-fill-gear',
-        'target' => 'modulo-respaldos',
-        'roles' => ['admin'],
+ [
+    'section' => 'Seguridad',
+    'label' => 'Respaldo y restauración',
+    'icon' => 'bi-database-fill-gear',
+
+    'route' => 'respaldos',
+
+    'match' => [
+        'respaldos',
+        'respaldos/descargar',
     ],
+
+    'target' => 'modulo-respaldos',
+
+    'roles' => ['admin'],
+],
+
+
+
+
 
   [
     'section' => 'Mi cuenta',

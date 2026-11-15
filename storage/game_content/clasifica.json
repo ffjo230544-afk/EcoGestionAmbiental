@@ -1,0 +1,118 @@
+{
+    "title": "Clasifica los residuos",
+    "short_description": "Arrastra cada residuo al contenedor correcto antes de terminar.",
+    "learning": "Aprende a separar residuos reciclables, orgánicos, especiales y peligrosos.",
+    "difficulty": "Básico",
+    "categories": {
+        "plastico": {
+            "label": "Plástico",
+            "icon": "bi-cup-straw",
+            "color": "blue"
+        },
+        "papel_carton": {
+            "label": "Papel y cartón",
+            "icon": "bi-box-seam",
+            "color": "amber"
+        },
+        "vidrio": {
+            "label": "Vidrio",
+            "icon": "bi-cup",
+            "color": "cyan"
+        },
+        "metal": {
+            "label": "Metales",
+            "icon": "bi-gear",
+            "color": "gray"
+        },
+        "organico": {
+            "label": "Orgánicos",
+            "icon": "bi-flower1",
+            "color": "green"
+        },
+        "especial": {
+            "label": "Especiales y peligrosos",
+            "icon": "bi-exclamation-triangle",
+            "color": "red"
+        }
+    },
+    "items": [
+        {
+            "id": "botella_de_pl_astico",
+            "name": "Botella de plástico",
+            "emoji": "🧴",
+            "category": "plastico"
+        },
+        {
+            "id": "envase_de_yogur",
+            "name": "Envase de yogur",
+            "emoji": "🥛",
+            "category": "plastico"
+        },
+        {
+            "id": "caja_de_cart_on",
+            "name": "Caja de cartón",
+            "emoji": "📦",
+            "category": "papel_carton"
+        },
+        {
+            "id": "peri_odico",
+            "name": "Periódico",
+            "emoji": "📰",
+            "category": "papel_carton"
+        },
+        {
+            "id": "frasco_de_vidrio",
+            "name": "Frasco de vidrio",
+            "emoji": "🫙",
+            "category": "vidrio"
+        },
+        {
+            "id": "botella_de_vidrio",
+            "name": "Botella de vidrio",
+            "emoji": "🍾",
+            "category": "vidrio"
+        },
+        {
+            "id": "lata_de_aluminio",
+            "name": "Lata de aluminio",
+            "emoji": "🥫",
+            "category": "metal"
+        },
+        {
+            "id": "cubiertos_de_metal",
+            "name": "Cubiertos de metal",
+            "emoji": "🍴",
+            "category": "metal"
+        },
+        {
+            "id": "c_ascara_de_pl_atano",
+            "name": "Cáscara de plátano",
+            "emoji": "🍌",
+            "category": "organico"
+        },
+        {
+            "id": "restos_de_comida",
+            "name": "Restos de comida",
+            "emoji": "🥬",
+            "category": "organico"
+        },
+        {
+            "id": "pila_usada",
+            "name": "Pila usada",
+            "emoji": "🔋",
+            "category": "especial"
+        },
+        {
+            "id": "tel_efono_viejo",
+            "name": "Teléfono viejo",
+            "emoji": "📱",
+            "category": "especial"
+        },
+        {
+            "id": "envase_de_jugo",
+            "name": "Envase de Jugo",
+            "emoji": "🧃",
+            "category": "papel_carton"
+        }
+    ]
+}

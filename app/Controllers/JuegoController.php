@@ -53,15 +53,22 @@ final class JuegoController extends Controller
             );
         }
 
-        $this->view(
-            'games/index',
-            [
-                'pageTitle' => 'Juegos y actividades',
-                'games' => $games,
-                'summary' => $resultModel->summaryForUser($userId),
-            ],
-            'app'
-        );
+       $this->view(
+    'games/index',
+    [
+        'pageTitle' => 'Juegos y actividades',
+        'games' => $games,
+        'summary' => $resultModel->summaryForUser(
+            $userId
+        ),
+        'canManage' => in_array(
+            auth_role(),
+            ['admin', 'coordinador'],
+            true
+        ),
+    ],
+    'app'
+);
     }
 
     public function classification(): void
@@ -882,9 +889,17 @@ final class JuegoController extends Controller
     }
 
     private function definitions(): array
-    {
-        return require ROOT_PATH . '/config/games.php';
-    }
+{
+    /*
+     | Primero obtengo el contenido original
+     | y después aplico las modificaciones guardadas.
+     */
+    $defaults = require ROOT_PATH
+        . '/config/games.php';
+
+    return (new ContenidoJuego())
+        ->merge($defaults);
+}
 
     private function jsonResponse(
         array $data,

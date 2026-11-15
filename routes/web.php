@@ -740,6 +740,28 @@ $router->get(
     $everyone
 );
 
+
+/*
+ | Solamente el administrador y el coordinador
+ | pueden modificar el contenido educativo.
+ */
+$router->get(
+    'juegos/editar',
+    'AdministracionJuegoController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'juegos/actualizar',
+    'AdministracionJuegoController',
+    'update',
+    $operations
+);
+
+
+
+
 $router->get(
     'juegos/clasificar',
     'JuegoController',
@@ -888,4 +910,56 @@ $router->post(
     'PerfilController',
     'changePassword',
     $everyone
+);
+
+
+
+/* ==========================================================
+   Respaldo y restauración de la base de datos
+   ========================================================== */
+
+/*
+ | Solamente el administrador puede consultar
+ | y ejecutar operaciones de respaldo.
+ */
+$router->get(
+    'respaldos',
+    'RespaldoController',
+    'index',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/generar',
+    'RespaldoController',
+    'generate',
+    ['admin']
+);
+
+$router->get(
+    'respaldos/descargar',
+    'RespaldoController',
+    'download',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/eliminar',
+    'RespaldoController',
+    'delete',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/restaurar',
+    'RespaldoController',
+    'restore',
+    ['admin']
+);
+
+$router->post(
+    'respaldos/restaurar-subido',
+    'RespaldoController',
+    'restoreUploaded',
+    ['admin']
 );

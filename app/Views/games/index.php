@@ -116,16 +116,87 @@
                         </span>
                     </div>
 
-                    <a class="btn btn-eco game-play-button" href="<?= e(url($game['route'])) ?>">
-                        <i class="bi bi-play-fill"></i>
-                        Jugar ahora
-                    </a>
+                    <div class="d-grid gap-2">
+    <a
+        class="btn btn-eco game-play-button"
+        href="<?= e(url($game['route'])) ?>"
+    >
+        <i class="bi bi-play-fill"></i>
+        Jugar ahora
+    </a>
+
+    <?php if (
+        $canManage
+        && in_array(
+            $game['slug'],
+            [
+            'clasifica',
+            'trivia',
+            'memorama',
+            'limpia-parque',
+            ],
+            true
+        )
+    ): ?>
+    <a
+        class="btn btn-eco-outline"
+        href="<?= e(
+            url(
+                'juegos/editar',
+                ['juego' => $game['slug']]
+            )
+        ) ?>"
+    >
+        <i class="bi bi-pencil-square me-2"></i>
+        Editar contenido
+    </a>
+    <?php endif; ?>
+</div>
                     <?php else: ?>
                     <button class="btn btn-light game-play-button" type="button" disabled>
                         <i class="bi bi-hourglass-split"></i>
                         En desarrollo
                     </button>
                     <?php endif; ?>
+
+
+
+
+
+<?php if (
+    $canManage
+    && !$game['available']
+    && $game['activity'] !== null
+    && in_array(
+        $game['slug'],
+        [
+        'clasifica',
+        'trivia',
+        'memorama',
+        'limpia-parque',
+        ],
+        true
+    )
+): ?>
+<a
+    class="btn btn-eco-outline game-play-button mt-2"
+    href="<?= e(
+        url(
+            'juegos/editar',
+            ['juego' => $game['slug']]
+        )
+    ) ?>"
+>
+    <i class="bi bi-pencil-square me-2"></i>
+    Editar o reactivar
+</a>
+<?php endif; ?>
+
+
+
+
+
+
                 </div>
             </article>
         </div>

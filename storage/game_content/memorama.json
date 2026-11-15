@@ -1,0 +1,92 @@
+{
+    "title": "Memorama ecológico",
+    "short_description": "Encuentra parejas entre residuos y su destino correcto.",
+    "learning": "Relaciona cada material con su forma adecuada de manejo.",
+    "difficulty": "Intermedio",
+    "pairs": [
+        {
+            "id": "botella_de_pl_astico_contenedor_de_pl_astico",
+            "first": {
+                "id": "primera_botella_de_pl_astico",
+                "label": "Botella de plástico",
+                "emoji": "🧴"
+            },
+            "second": {
+                "id": "segunda_contenedor_de_pl_astico",
+                "label": "Contenedor de plástico",
+                "emoji": "♻️"
+            },
+            "explanation": "Las botellas limpias y vacías pueden separarse con los plásticos reciclables."
+        },
+        {
+            "id": "caja_de_cart_on_papel_y_cart_on",
+            "first": {
+                "id": "primera_caja_de_cart_on",
+                "label": "Caja de cartón",
+                "emoji": "📦"
+            },
+            "second": {
+                "id": "segunda_papel_y_cart_on",
+                "label": "Papel y cartón",
+                "emoji": "📰"
+            },
+            "explanation": "El cartón seco y sin restos de comida puede aprovecharse nuevamente."
+        },
+        {
+            "id": "frasco_de_vidrio_contenedor_de_vidrio",
+            "first": {
+                "id": "primera_frasco_de_vidrio",
+                "label": "Frasco de vidrio",
+                "emoji": "🫙"
+            },
+            "second": {
+                "id": "segunda_contenedor_de_vidrio",
+                "label": "Contenedor de vidrio",
+                "emoji": "🍾"
+            },
+            "explanation": "Los envases de vidrio deben vaciarse y separarse sin mezclarlos con cerámica."
+        },
+        {
+            "id": "lata_de_aluminio_contenedor_de_metales",
+            "first": {
+                "id": "primera_lata_de_aluminio",
+                "label": "Lata de aluminio",
+                "emoji": "🥫"
+            },
+            "second": {
+                "id": "segunda_contenedor_de_metales",
+                "label": "Contenedor de metales",
+                "emoji": "⚙️"
+            },
+            "explanation": "Las latas pueden reciclarse muchas veces cuando se separan correctamente."
+        },
+        {
+            "id": "c_ascara_de_pl_atano_composta",
+            "first": {
+                "id": "primera_c_ascara_de_pl_atano",
+                "label": "Cáscara de plátano",
+                "emoji": "🍌"
+            },
+            "second": {
+                "id": "segunda_composta",
+                "label": "Composta",
+                "emoji": "🌱"
+            },
+            "explanation": "Muchos restos vegetales pueden transformarse en composta para nutrir el suelo."
+        },
+        {
+            "id": "pila_usada_acopio_especial",
+            "first": {
+                "id": "primera_pila_usada",
+                "label": "Pila usada",
+                "emoji": "🔋"
+            },
+            "second": {
+                "id": "segunda_acopio_especial",
+                "label": "Acopio especial",
+                "emoji": "⚠️"
+            },
+            "explanation": "Las pilas requieren un punto de acopio autorizado y nunca deben mezclarse con basura común."
+        }
+    ]
+}

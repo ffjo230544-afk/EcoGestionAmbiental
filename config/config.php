@@ -33,6 +33,22 @@ return [
     'db_password' => '',
     'db_charset' => 'utf8mb4',
 
+
+    /*
+ | Aquí indico las herramientas utilizadas para
+ | generar y restaurar respaldos de MySQL.
+ */
+'mysql_dump_binary' =>
+    'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+
+'mysql_client_binary' =>
+    'C:\\xampp\\mysql\\bin\\mysql.exe',
+
+/*
+ | Limito los archivos SQL subidos a 50 MB.
+ */
+'backup_max_upload_mb' => 50,
+
     /*
      | Aquí limito los intentos incorrectos de inicio de sesión.
      | Después de cinco errores se bloqueará durante 15 minutos.

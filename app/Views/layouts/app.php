@@ -119,6 +119,12 @@ $navigation = menu_items();
 <script src="<?= e(asset('js/games.js')) ?>"></script>
 <?php endif; ?>
 
+<?php if (!empty($useGameEditor)): ?>
+<script src="<?= e(
+    asset('js/game-editor.js')
+) ?>"></script>
+<?php endif; ?>
+
 <?php if (!empty($useAppointments)): ?>
 <script src="<?= e(
     asset('js/appointments.js')

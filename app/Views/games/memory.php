@@ -14,8 +14,8 @@
         <div>
             <span class="section-label">EcoAventuras</span>
             <h1 class="page-title mt-1"><?= e($game['title']) ?></h1>
-            <p class="page-subtitle">
-                Encuentra cada residuo y relaciónalo con su destino correcto.
+           <p class="page-subtitle">
+            <?= e($game['short_description']) ?>
             </p>
         </div>
 
@@ -60,7 +60,7 @@
                 Observa, recuerda y relaciona
             </span>
 
-            <h2>Descubre las seis parejas ambientales</h2>
+            <h2>Descubre y relaciona las parejas ambientales</h2>
             <p>
                 Voltea dos tarjetas por turno. Una pareja se forma al unir
                 un residuo con la manera adecuada de aprovecharlo o desecharlo.

@@ -16,7 +16,7 @@
             <span class="section-label">EcoAventuras</span>
             <h1 class="page-title mt-1"><?= e($game['title']) ?></h1>
             <p class="page-subtitle">
-                Encuentra los residuos ocultos sin molestar a la naturaleza.
+                <?= e($game['short_description']) ?>
             </p>
         </div>
 
@@ -62,8 +62,8 @@
             </span>
             <h2>Devuelve la vida y el color al parque</h2>
             <p>
-                Toca solamente los residuos. Las flores, aves, mariposas
-                y hongos forman parte del ecosistema y deben permanecer ahí.
+                Toca solamente los residuos. Los elementos naturales
+                forman parte del ecosistema y deben permanecer en el parque.
             </p>
         </div>
 

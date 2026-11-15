@@ -17,6 +17,23 @@ final class ActividadGamificacion extends Model
         'estado',
     ];
 
+    /**
+     * Busco una actividad sin importar si está activa o inactiva.
+     */
+    public function findByName(string $name): ?array
+    {
+        return $this->row(
+            'SELECT *
+             FROM actividades_gamificacion
+             WHERE nombre = ?
+             LIMIT 1',
+            [$name]
+        );
+    }
+
+    /**
+     * Busco una actividad que se encuentre disponible para jugar.
+     */
     public function findActiveByName(string $name): ?array
     {
         return $this->row(
@@ -29,13 +46,17 @@ final class ActividadGamificacion extends Model
         );
     }
 
+    /**
+     * Obtengo las actividades correspondientes a varios juegos.
+     */
     public function byNames(array $names): array
     {
         $names = array_values(
             array_filter(
                 $names,
                 static fn(mixed $name): bool =>
-                    is_string($name) && trim($name) !== ''
+                    is_string($name)
+                    && trim($name) !== ''
             )
         );
 
@@ -45,7 +66,11 @@ final class ActividadGamificacion extends Model
 
         $markers = implode(
             ', ',
-            array_fill(0, count($names), '?')
+            array_fill(
+                0,
+                count($names),
+                '?'
+            )
         );
 
         return $this->rows(
