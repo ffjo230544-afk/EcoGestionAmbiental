@@ -53,19 +53,31 @@ final class JuegoController extends Controller
             );
         }
 
-       $this->view(
+    $this->view(
     'games/index',
     [
         'pageTitle' => 'Juegos y actividades',
+
         'games' => $games,
+
         'summary' => $resultModel->summaryForUser(
             $userId
         ),
+
         'canManage' => in_array(
             auth_role(),
-            ['admin', 'coordinador'],
+            [
+                'admin',
+                'coordinador',
+            ],
             true
         ),
+
+        /*
+         | Aquí indico al layout que debe cargar
+         | la hoja de estilos de los juegos.
+         */
+        'useGames' => true,
     ],
     'app'
 );

@@ -3539,3 +3539,262 @@
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   Catálogo organizado de EcoAventuras
+   ========================================================= */
+
+.game-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.game-summary-grid .game-stat {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 1rem;
+}
+
+.game-summary-grid .game-stat > div {
+    display: grid;
+    min-width: 0;
+}
+
+.game-summary-grid .game-stat strong {
+    color: #173b27;
+    line-height: 1.1;
+}
+
+.game-summary-grid .game-stat span {
+    margin-top: 0.2rem;
+}
+
+.game-catalog-header {
+    align-items: center;
+}
+
+.game-catalog-count {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1rem;
+    color: #166534;
+    background: #ecf8ef;
+    border: 1px solid #d3e9d9;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.game-catalog-count i {
+    color: #e59b08;
+}
+
+.game-catalog-grid > div {
+    display: flex;
+}
+
+.game-catalog-grid .game-card {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.game-catalog-grid .game-card-body {
+    display: flex;
+    height: auto;
+    flex: 1;
+    flex-direction: column;
+}
+
+.game-card-pattern {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.game-card-pattern span {
+    position: absolute;
+    display: block;
+    border: 2px solid
+        color-mix(
+            in srgb,
+            var(--game-accent) 14%,
+            transparent
+        );
+    border-radius: 50%;
+}
+
+.game-card-pattern span:nth-child(1) {
+    top: 18px;
+    left: 26px;
+    width: 25px;
+    height: 25px;
+}
+
+.game-card-pattern span:nth-child(2) {
+    right: 28px;
+    bottom: 22px;
+    width: 40px;
+    height: 40px;
+}
+
+.game-card-pattern span:nth-child(3) {
+    top: 42px;
+    right: 85px;
+    width: 12px;
+    height: 12px;
+    background: var(--game-accent);
+    border: 0;
+    opacity: 0.13;
+}
+
+.game-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.game-card-number {
+    color: #87948c;
+    font-size: 0.68rem;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.game-card-description {
+    min-height: 50px;
+    margin-bottom: 1rem;
+}
+
+.game-learning-note {
+    min-height: 84px;
+    margin-bottom: 1rem;
+}
+
+.game-learning-note div {
+    display: grid;
+    gap: 0.18rem;
+}
+
+.game-learning-note strong {
+    color: #354a3d;
+    font-size: 0.7rem;
+}
+
+.game-learning-note span {
+    color: #66766d;
+}
+
+.game-card-record {
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    padding: 0.85rem 0;
+    border-top: 1px solid #edf2ee;
+    border-bottom: 1px solid #edf2ee;
+}
+
+.game-card-record span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+}
+
+.game-card-record strong {
+    color: #3b4d42;
+}
+
+.game-card-actions {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.game-card-actions .btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-card-disabled .game-card-icon {
+    filter: grayscale(0.35);
+    opacity: 0.75;
+}
+
+.game-card-disabled .game-card-visual {
+    background:
+        linear-gradient(
+            135deg,
+            #f1f5f2,
+            #ffffff
+        );
+}
+
+@media (max-width: 767.98px) {
+    .game-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .game-summary-grid .game-stat {
+        min-height: 88px;
+    }
+
+    .game-catalog-header {
+        align-items: stretch;
+    }
+
+    .game-catalog-count {
+        width: fit-content;
+    }
+
+    .game-card-description,
+    .game-learning-note {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .game-hero {
+        min-height: 220px;
+        padding: 1.45rem;
+    }
+
+    .game-hero h1 {
+        font-size: 2.35rem;
+    }
+
+    .game-card-visual {
+        min-height: 135px;
+    }
+
+    .game-card-body {
+        padding: 1.15rem;
+    }
+
+    .game-card-record {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
