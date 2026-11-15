@@ -39,13 +39,11 @@ $navigation = menu_items();
 
 <!doctype html>
 <html lang="es">
+
 <head>
     <meta charset="utf-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <meta name="theme-color" content="#16803c">
 
@@ -54,39 +52,23 @@ $navigation = menu_items();
         | EcoGestión Ambiental
     </title>
 
-    <link
-        rel="icon"
-        href="<?= e(asset('images/eco-mark.svg')) ?>"
-        type="image/svg+xml"
-    >
+    <link rel="icon" href="<?= e(asset('images/eco-mark.svg')) ?>" type="image/svg+xml">
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
 
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link
-        rel="stylesheet"
-        href="<?= e(asset('css/ecogestion.css')) ?>"
-    >
+    <?php if (!empty($useLeaflet)): ?>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <?php endif; ?>
+
+    <link rel="stylesheet" href="<?= e(asset('css/ecogestion.css')) ?>">
 </head>
 
 <body>
@@ -94,10 +76,7 @@ $navigation = menu_items();
         <?php require ROOT_PATH
             . '/app/Views/partials/sidebar.php'; ?>
 
-        <div
-            class="sidebar-overlay"
-            data-sidebar-overlay
-        ></div>
+        <div class="sidebar-overlay" data-sidebar-overlay></div>
 
         <div class="main-area">
             <?php require ROOT_PATH
@@ -109,10 +88,8 @@ $navigation = menu_items();
 
                 <?= $content ?>
 
-                <p
-                    class="mt-5 mb-2 text-center
-                           text-muted-eco small"
-                >
+                <p class="mt-5 mb-2 text-center
+                           text-muted-eco small">
                     EcoGestión Ambiental · UPEMOR ·
                     <?= date('Y') ?>
                 </p>
@@ -120,12 +97,20 @@ $navigation = menu_items();
         </div>
     </div>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script
-        src="<?= e(asset('js/ecogestion.js')) ?>"
-    ></script>
+    <?php if (!empty($useLeaflet)): ?>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="<?= e(asset('js/map.js')) ?>"></script>
+    <?php endif; ?>
+    <?php if (!empty($useQuoteCalculator)): ?>
+    <script src="<?= e(
+            asset('js/quote-calculator.js')
+        ) ?>"></script>
+    <?php endif; ?>
+
+    <script src="<?= e(asset('js/ecogestion.js')) ?>"></script>
 </body>
+
 </html>

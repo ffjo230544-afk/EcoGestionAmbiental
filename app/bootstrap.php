@@ -36,8 +36,22 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
-header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'");
-
+header(
+    "Content-Security-Policy: "
+    . "default-src 'self'; "
+    . "script-src 'self' https://cdn.jsdelivr.net; "
+    . "style-src 'self' 'unsafe-inline' "
+    . "https://cdn.jsdelivr.net "
+    . "https://fonts.googleapis.com; "
+    . "font-src 'self' "
+    . "https://fonts.gstatic.com "
+    . "https://cdn.jsdelivr.net data:; "
+    . "img-src 'self' data: "
+    . "https://*.tile.openstreetmap.org; "
+    . "frame-ancestors 'self'; "
+    . "base-uri 'self'; "
+    . "form-action 'self'"
+);
 
 /*
  | Aquí evito que el navegador almacene pantallas privadas

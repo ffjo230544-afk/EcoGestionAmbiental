@@ -138,4 +138,48 @@ document.querySelectorAll('[data-category-row]').forEach((row) => {
 });
 
 
+
+/*
+ | Muestro las opciones escritas solamente
+ | cuando la pregunta es de selección.
+ */
+const questionType = document.querySelector(
+  "[data-question-type]"
+);
+
+const questionOptions = document.querySelector(
+  "[data-question-options]"
+);
+
+const updateQuestionOptions = () => {
+  if (!questionType || !questionOptions) {
+    return;
+  }
+
+  const visible =
+    questionType.value === "opcion_multiple";
+
+  const textarea =
+    questionOptions.querySelector("textarea");
+
+  questionOptions.classList.toggle(
+    "d-none",
+    !visible
+  );
+
+  if (textarea) {
+    textarea.required = visible;
+  }
+};
+
+questionType?.addEventListener(
+  "change",
+  updateQuestionOptions
+);
+
+updateQuestionOptions();
+
+
+
+
 })();

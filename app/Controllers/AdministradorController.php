@@ -11,7 +11,7 @@ final class AdministradorController extends Controller
             array_filter(
                 $menu,
                 static fn(array $item): bool =>
-                    $item['target'] !== 'inicio-panel'
+                    ($item['target'] ?? '') !== 'inicio-panel'
             )
         );
 

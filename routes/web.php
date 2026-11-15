@@ -275,7 +275,16 @@ $router->post(
     $scheduleManagers
 );
 
+/* ==========================================================
+   Mapa interactivo de centros de acopio
+   ========================================================== */
 
+$router->get(
+    'mapa',
+    'MapaController',
+    'index',
+    $everyone
+);
 
 
 
@@ -409,4 +418,208 @@ $router->post(
         'admin',
         'coordinador',
     ]
+);
+
+
+
+/* ==========================================================
+   Encuestas ambientales
+   ========================================================== */
+
+/* Los tres roles pueden consultar y responder. */
+$router->get(
+    'encuestas',
+    'EncuestaController',
+    'index',
+    $everyone
+);
+
+$router->get(
+    'encuestas/responder',
+    'EncuestaController',
+    'respond',
+    $everyone
+);
+
+$router->post(
+    'encuestas/enviar',
+    'EncuestaController',
+    'submit',
+    $everyone
+);
+
+/* Administración para administrador y coordinador. */
+$router->get(
+    'encuestas/crear',
+    'EncuestaController',
+    'create',
+    $operations
+);
+
+$router->post(
+    'encuestas/guardar',
+    'EncuestaController',
+    'store',
+    $operations
+);
+
+$router->get(
+    'encuestas/editar',
+    'EncuestaController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'encuestas/actualizar',
+    'EncuestaController',
+    'update',
+    $operations
+);
+
+$router->get(
+    'encuestas/preguntas',
+    'EncuestaController',
+    'questions',
+    $operations
+);
+
+$router->get(
+    'encuestas/preguntas/crear',
+    'EncuestaController',
+    'createQuestion',
+    $operations
+);
+
+$router->post(
+    'encuestas/preguntas/guardar',
+    'EncuestaController',
+    'storeQuestion',
+    $operations
+);
+
+$router->get(
+    'encuestas/preguntas/editar',
+    'EncuestaController',
+    'editQuestion',
+    $operations
+);
+
+$router->post(
+    'encuestas/preguntas/actualizar',
+    'EncuestaController',
+    'updateQuestion',
+    $operations
+);
+
+$router->post(
+    'encuestas/preguntas/cambiar-estado',
+    'EncuestaController',
+    'changeQuestionStatus',
+    $operations
+);
+
+$router->get(
+    'encuestas/resultados',
+    'EncuestaController',
+    'results',
+    $operations
+);
+
+
+
+/* ==========================================================
+   Tarifas de cotización
+   ========================================================== */
+
+/*
+ | Solamente el administrador y el coordinador
+ | pueden administrar los precios.
+ */
+$router->get(
+    'tarifas',
+    'TarifaController',
+    'index',
+    $operations
+);
+
+$router->get(
+    'tarifas/crear',
+    'TarifaController',
+    'create',
+    $operations
+);
+
+$router->post(
+    'tarifas/guardar',
+    'TarifaController',
+    'store',
+    $operations
+);
+
+$router->get(
+    'tarifas/editar',
+    'TarifaController',
+    'edit',
+    $operations
+);
+
+$router->post(
+    'tarifas/actualizar',
+    'TarifaController',
+    'update',
+    $operations
+);
+
+$router->post(
+    'tarifas/cambiar-estado',
+    'TarifaController',
+    'changeStatus',
+    $operations
+);
+
+/* ==========================================================
+   Cotizador y gestión de cotizaciones
+   ========================================================== */
+
+/* Cotizador exclusivo del ciudadano. */
+$router->get(
+    'cotizador',
+    'CotizacionController',
+    'create',
+    ['ciudadano']
+);
+
+$router->post(
+    'cotizaciones/guardar',
+    'CotizacionController',
+    'store',
+    ['ciudadano']
+);
+
+/*
+ | Los tres roles pueden abrir la ruta,
+ | pero el controlador limita los resultados.
+ */
+$router->get(
+    'cotizaciones',
+    'CotizacionController',
+    'index',
+    $everyone
+);
+
+/* Administración de estados. */
+$router->post(
+    'cotizaciones/cambiar-estado',
+    'CotizacionController',
+    'changeStatus',
+    $operations
+);
+
+/* Cancelación exclusiva del propietario. */
+$router->post(
+    'cotizaciones/cancelar',
+    'CotizacionController',
+    'cancel',
+    ['ciudadano']
 );

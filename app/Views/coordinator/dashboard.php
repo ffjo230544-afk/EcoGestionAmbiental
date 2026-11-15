@@ -110,7 +110,7 @@ $metrics = [
 
         <div
             class="col-md-6 col-xl-4"
-            id="<?= e($module['target']) ?>"
+            id="<?= e($module['target'] ?? '') ?>"
         >
             <article class="eco-card feature-card">
 
@@ -126,19 +126,38 @@ $metrics = [
                     <?= e($module['label']) ?>
                 </h3>
 
-                <p class="text-muted-eco">
-                    La interfaz y las operaciones de este módulo
-                    se agregarán posteriormente.
-                </p>
+                <?php if (!empty($module['route'])): ?>
 
-                <button
-                    class="btn btn-light-eco"
-                    type="button"
-                    disabled
-                >
-                    <i class="bi bi-hourglass-split me-2"></i>
-                    Próximamente
-                </button>
+                    <p class="text-muted-eco">
+                        Este módulo ya se encuentra disponible
+                        para el perfil coordinador.
+                    </p>
+
+                    <a
+                        class="btn btn-eco"
+                        href="<?= e(menu_url($module)) ?>"
+                    >
+                        <i class="bi bi-arrow-right-circle me-2"></i>
+                        Abrir módulo
+                    </a>
+
+                <?php else: ?>
+
+                    <p class="text-muted-eco">
+                        La interfaz y las operaciones de este módulo
+                        se agregarán posteriormente.
+                    </p>
+
+                    <button
+                        class="btn btn-light-eco"
+                        type="button"
+                        disabled
+                    >
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        Próximamente
+                    </button>
+
+                <?php endif; ?>
 
             </article>
         </div>

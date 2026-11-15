@@ -168,7 +168,7 @@ $metrics = [
 
     <?php foreach ($modules as $module): ?>
 
-    <div class="col-md-6 col-xl-4" id="<?= e($module['target']) ?>">
+    <div class="col-md-6 col-xl-4" id="<?= e($module['target'] ?? '') ?>">
         <article class="eco-card feature-card">
 
             <div class="feature-icon">
@@ -183,15 +183,38 @@ $metrics = [
                 <?= e($module['label']) ?>
             </h3>
 
-            <p class="text-muted-eco">
-                Este servicio se conectará con su módulo
-                funcional en una etapa posterior.
-            </p>
+            <?php if (!empty($module['route'])): ?>
 
-            <button class="btn btn-light-eco" type="button" disabled>
-                <i class="bi bi-hourglass-split me-2"></i>
-                Próximamente
-            </button>
+                <p class="text-muted-eco">
+                    Este servicio ya se encuentra disponible
+                    dentro del portal ciudadano.
+                </p>
+
+                <a
+                    class="btn btn-eco"
+                    href="<?= e(menu_url($module)) ?>"
+                >
+                    <i class="bi bi-arrow-right-circle me-2"></i>
+                    Abrir módulo
+                </a>
+
+            <?php else: ?>
+
+                <p class="text-muted-eco">
+                    Este servicio se conectará con su módulo
+                    funcional en una etapa posterior.
+                </p>
+
+                <button
+                    class="btn btn-light-eco"
+                    type="button"
+                    disabled
+                >
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    Próximamente
+                </button>
+
+            <?php endif; ?>
 
         </article>
     </div>

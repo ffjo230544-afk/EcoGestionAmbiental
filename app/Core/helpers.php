@@ -34,7 +34,19 @@ function url(string $route = '', array $parameters = []): string
 /** Construye la dirección de un CSS, JavaScript o imagen pública. */
 function asset(string $path): string
 {
-    return base_url() . '/public/' . ltrim($path, '/');
+    $relativePath = ltrim($path, '/');
+    $url = base_url() . '/public/' . $relativePath;
+    $file = ROOT_PATH . '/public/' . $relativePath;
+
+    /*
+     | Agrego una versión basada en la fecha del archivo.
+     | Así el navegador no conserva CSS o JavaScript anterior.
+     */
+    if (is_file($file)) {
+        $url .= '?v=' . filemtime($file);
+    }
+
+    return $url;
 }
 
 /** Redirige a otra ruta interna y termina la petición actual. */
@@ -125,15 +137,108 @@ function old(
         $value = $value[$segment];
     }
 
-    if (
-        is_array($value)
-        || is_object($value)
-    ) {
+    /*
+     | Las selecciones múltiples necesitan recuperar arreglos.
+     | Los objetos no forman parte de un formulario válido.
+     */
+    if (is_object($value)) {
         return $default;
     }
 
     return $value;
 }
+
+/**
+ * Marca como seleccionada una opción de un elemento select.
+ */
+function selected(
+    mixed $current,
+    mixed $expected
+): string {
+    return (string) $current === (string) $expected
+        ? 'selected'
+        : '';
+}
+
+/**
+ * Marca una casilla o botón de opción.
+ * También admite arreglos de selección múltiple.
+ */
+function checked(
+    mixed $current,
+    mixed $expected = true
+): string {
+    if (is_array($current)) {
+        foreach ($current as $value) {
+            if ((string) $value === (string) $expected) {
+                return 'checked';
+            }
+        }
+
+        return '';
+    }
+
+    return (string) $current === (string) $expected
+        ? 'checked'
+        : '';
+}
+
+/**
+ * Convierte una fecha de MySQL a un formato legible.
+ */
+function date_mx(
+    mixed $value,
+    string $format = 'd/m/Y'
+): string {
+    $date = trim((string) ($value ?? ''));
+
+    if ($date === '') {
+        return 'Sin fecha';
+    }
+
+    try {
+        return (new DateTimeImmutable($date))->format($format);
+    } catch (Throwable) {
+        return 'Fecha no disponible';
+    }
+}
+
+
+
+
+
+/**
+ * Convierte una cantidad numérica al formato de moneda.
+ */
+function money(mixed $amount): string
+{
+    return '$'
+        . number_format(
+            (float) $amount,
+            2,
+            '.',
+            ','
+        );
+}
+
+/**
+ * Comprueba que una fecha utilice exactamente
+ * el formato año-mes-día.
+ */
+function valid_date(string $value): bool
+{
+    $date = DateTimeImmutable::createFromFormat(
+        '!Y-m-d',
+        $value
+    );
+
+    return $date !== false
+        && $date->format('Y-m-d') === $value;
+}
+
+
+
+
 
 /**
  * Elimina los valores anteriores después
@@ -373,20 +478,55 @@ function require_roles(array $roles): array
 
 
 
-/** Combina una vista específica con una plantilla o layout general. */
-function render(string $view, array $data = [], string $layout = 'public'): void
-{
-    $viewFile = ROOT_PATH . '/app/Views/' . $view . '.php';
-    $layoutFile = ROOT_PATH . '/app/Views/layouts/' . $layout . '.php';
-    if (!is_file($viewFile) || !is_file($layoutFile)) {
-        throw new RuntimeException('No se encontró la vista o el layout solicitado.');
+/**
+ * Combina una vista específica con una plantilla general.
+ * Los módulos autenticados utilizan `app` por defecto.
+ */
+function render(
+    string $view,
+    array $data = [],
+    string $layout = 'app'
+): void {
+    $viewFile = ROOT_PATH
+        . '/app/Views/'
+        . $view
+        . '.php';
+
+    $layoutFile = ROOT_PATH
+        . '/app/Views/layouts/'
+        . $layout
+        . '.php';
+
+    if (
+        !is_file($viewFile)
+        || !is_file($layoutFile)
+    ) {
+        throw new RuntimeException(
+            'No se encontró la vista o el layout solicitado.'
+        );
     }
+
     extract($data, EXTR_SKIP);
-    ob_start();
-    require $viewFile;
-    $content = (string) ob_get_clean();
-    require $layoutFile;
-    forget_old_input();
+    $initialBufferLevel = ob_get_level();
+
+    try {
+        ob_start();
+        require $viewFile;
+        $content = (string) ob_get_clean();
+
+        ob_start();
+        require $layoutFile;
+        $document = (string) ob_get_clean();
+
+        echo $document;
+        forget_old_input();
+    } catch (Throwable $exception) {
+        while (ob_get_level() > $initialBufferLevel) {
+            ob_end_clean();
+        }
+
+        throw $exception;
+    }
 }
 
 function current_route(): string

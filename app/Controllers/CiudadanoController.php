@@ -11,7 +11,7 @@ final class CiudadanoController extends Controller
             array_filter(
                 $menu,
                 static fn(array $item): bool =>
-                    $item['target'] !== 'inicio-ciudadano'
+                    ($item['target'] ?? '') !== 'inicio-ciudadano'
             )
         );
 

@@ -108,13 +108,25 @@ return [
         'ciudadano',
     ],
 ],
-    [
-        'section' => 'Centros y residuos',
-        'label' => 'Mapa interactivo',
-        'icon' => 'bi-map-fill',
-        'target' => 'modulo-mapa',
-        'roles' => ['admin', 'coordinador', 'ciudadano'],
+   [
+    'section' => 'Centros y residuos',
+    'label' => 'Mapa interactivo',
+    'icon' => 'bi-map-fill',
+
+    'route' => 'mapa',
+
+    'match' => [
+        'mapa',
     ],
+
+    'target' => 'modulo-mapa',
+
+    'roles' => [
+        'admin',
+        'coordinador',
+        'ciudadano',
+    ],
+],
 
 
 
@@ -130,6 +142,7 @@ return [
         'educacion/crear',
         'educacion/editar',
     ],
+    'target' => 'modulo-educacion',
     'roles' => [
         'admin',
         'coordinador',
@@ -149,6 +162,34 @@ return [
         'noticias/editar',
     ],
 
+    'target' => 'modulo-noticias',
+
+    'roles' => [
+        'admin',
+        'coordinador',
+        'ciudadano',
+    ],
+],
+[
+    'section' => 'Educación ambiental',
+    'label' => 'Encuestas',
+    'icon' => 'bi-ui-checks-grid',
+
+    'route' => 'encuestas',
+
+    'match' => [
+        'encuestas',
+        'encuestas/responder',
+        'encuestas/crear',
+        'encuestas/editar',
+        'encuestas/preguntas',
+        'encuestas/preguntas/crear',
+        'encuestas/preguntas/editar',
+        'encuestas/resultados',
+    ],
+
+    'target' => 'modulo-encuestas',
+
     'roles' => [
         'admin',
         'coordinador',
@@ -157,33 +198,47 @@ return [
 ],
     [
         'section' => 'Educación ambiental',
-        'label' => 'Encuestas',
-        'icon' => 'bi-ui-checks-grid',
-        'target' => 'modulo-encuestas',
-        'roles' => ['admin', 'coordinador', 'ciudadano'],
-    ],
-    [
-        'section' => 'Educación ambiental',
         'label' => 'Juegos y actividades',
         'icon' => 'bi-controller',
         'target' => 'modulo-actividades',
         'roles' => ['admin', 'coordinador', 'ciudadano'],
     ],
 
-    [
-        'section' => 'Operación',
-        'label' => 'Tarifas de cotización',
-        'icon' => 'bi-tags-fill',
-        'target' => 'modulo-tarifas',
-        'roles' => ['admin', 'coordinador'],
+
+
+
+              /*     OPERACIÓN  */
+
+[
+    'section' => 'Operación',
+    'label' => 'Tarifas de cotización',
+    'icon' => 'bi-tags-fill',
+    'route' => 'tarifas',
+    'match' => [
+        'tarifas',
+        'tarifas/crear',
+        'tarifas/editar',
     ],
-    [
-        'section' => 'Operación',
-        'label' => 'Gestión de cotizaciones',
-        'icon' => 'bi-cash-coin',
-        'target' => 'modulo-cotizaciones',
-        'roles' => ['admin', 'coordinador'],
+    'target' => 'modulo-tarifas',
+    'roles' => [
+        'admin',
+        'coordinador',
     ],
+],
+  [
+    'section' => 'Operación',
+    'label' => 'Gestión de cotizaciones',
+    'icon' => 'bi-cash-coin',
+    'route' => 'cotizaciones',
+    'match' => [
+        'cotizaciones',
+    ],
+    'target' => 'modulo-cotizaciones',
+    'roles' => [
+        'admin',
+        'coordinador',
+    ],
+],
     [
         'section' => 'Operación',
         'label' => 'Gestión de citas',
@@ -206,20 +261,32 @@ return [
         'roles' => ['admin', 'coordinador'],
     ],
 
-    [
-        'section' => 'Mis servicios',
-        'label' => 'Cotizar materiales',
-        'icon' => 'bi-calculator-fill',
-        'target' => 'modulo-cotizador',
-        'roles' => ['ciudadano'],
+ [
+    'section' => 'Mis servicios',
+    'label' => 'Cotizar materiales',
+    'icon' => 'bi-calculator-fill',
+    'route' => 'cotizador',
+    'match' => [
+        'cotizador',
     ],
-    [
-        'section' => 'Mis servicios',
-        'label' => 'Mis cotizaciones',
-        'icon' => 'bi-cash-stack',
-        'target' => 'modulo-mis-cotizaciones',
-        'roles' => ['ciudadano'],
+    'target' => 'modulo-cotizador',
+    'roles' => [
+        'ciudadano',
     ],
+],
+   [
+    'section' => 'Mis servicios',
+    'label' => 'Mis cotizaciones',
+    'icon' => 'bi-cash-stack',
+    'route' => 'cotizaciones',
+    'match' => [
+        'cotizaciones',
+    ],
+    'target' => 'modulo-mis-cotizaciones',
+    'roles' => [
+        'ciudadano',
+    ],
+],
     [
         'section' => 'Mis servicios',
         'label' => 'Solicitar una cita',

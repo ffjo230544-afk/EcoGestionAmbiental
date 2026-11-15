@@ -81,7 +81,8 @@ final class Router
 
             render(
                 'errors/404',
-                ['pageTitle' => 'Página no encontrada']
+                ['pageTitle' => 'Página no encontrada'],
+                'public'
             );
 
             return;
