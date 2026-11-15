@@ -360,45 +360,78 @@
                 ) ?></textarea>
             </div>
 
-            <div class="col-md-4">
-                <label
-                    for="estado"
-                    class="form-label"
-                >
-                    Estado del registro
-                </label>
+          <div class="col-md-4">
+    <label class="form-label">
+        Estado del registro
+    </label>
 
-                <?php
-                $selectedStatus = old(
-                    'estado',
-                    $record['estado'] ?? 'activo'
-                );
-                ?>
+    <?php
+    $currentStatus = (string) (
+        $record['estado'] ?? 'activo'
+    );
+    ?>
 
-                <select
-                    id="estado"
-                    name="estado"
-                    class="form-select"
-                >
-                    <option
-                        value="activo"
-                        <?= $selectedStatus === 'activo'
-                            ? 'selected'
-                            : '' ?>
-                    >
-                        Activo
-                    </option>
+    <?php if ($canChangeStatus): ?>
 
-                    <option
-                        value="inactivo"
-                        <?= $selectedStatus === 'inactivo'
-                            ? 'selected'
-                            : '' ?>
-                    >
-                        Inactivo
-                    </option>
-                </select>
-            </div>
+        <?php
+        $selectedStatus = old(
+            'estado',
+            $currentStatus
+        );
+        ?>
+
+        <select
+            id="estado"
+            name="estado"
+            class="form-select"
+        >
+            <option
+                value="activo"
+                <?= selected(
+                    $selectedStatus,
+                    'activo'
+                ) ?>
+            >
+                Activo
+            </option>
+
+            <option
+                value="inactivo"
+                <?= selected(
+                    $selectedStatus,
+                    'inactivo'
+                ) ?>
+            >
+                Inactivo
+            </option>
+        </select>
+
+    <?php else: ?>
+
+        <input
+            type="hidden"
+            name="estado"
+            value="<?= e($currentStatus) ?>"
+        >
+
+        <div>
+            <span
+                class="status-pill
+                       status-<?= e($currentStatus) ?>"
+            >
+                <?= $currentStatus === 'activo'
+                    ? 'Activo'
+                    : 'Inactivo' ?>
+            </span>
+        </div>
+
+        <div class="form-text">
+            Solamente el administrador puede cambiar
+            el estado del centro.
+        </div>
+
+    <?php endif; ?>
+</div>
         </div>
     </div>
 

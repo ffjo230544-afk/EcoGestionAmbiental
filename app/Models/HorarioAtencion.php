@@ -44,48 +44,63 @@ final class HorarioAtencion extends Model
     }
 
     public function allGrouped(
-        bool $onlyActiveCenters
-    ): array {
-        $where = $onlyActiveCenters
-            ? ' WHERE p.estado = ?'
-            : '';
+    bool $onlyActiveCenters,
+    ?int $restrictedPointId = null
+): array {
+    $conditions = [];
+    $parameters = [];
 
-        $parameters = $onlyActiveCenters
-            ? ['activo']
-            : [];
-
-        $rows = $this->rows(
-            "SELECT
-                h.*,
-                p.nombre AS nombre_centro,
-                p.estado AS estado_centro
-             FROM horarios_atencion AS h
-             INNER JOIN puntos_atencion AS p
-                ON p.id_punto = h.id_punto"
-            . $where
-            . " ORDER BY
-                p.nombre,
-                FIELD(
-                    h.dia_semana,
-                    'lunes',
-                    'martes',
-                    'miercoles',
-                    'jueves',
-                    'viernes',
-                    'sabado',
-                    'domingo'
-                )",
-            $parameters
-        );
-
-        $grouped = [];
-
-        foreach ($rows as $row) {
-            $grouped[(int) $row['id_punto']][] = $row;
-        }
-
-        return $grouped;
+    if ($onlyActiveCenters) {
+        $conditions[] = 'p.estado = ?';
+        $parameters[] = 'activo';
     }
+
+    if (
+        $restrictedPointId !== null
+        && $restrictedPointId > 0
+    ) {
+        $conditions[] = 'p.id_punto = ?';
+        $parameters[] = $restrictedPointId;
+    }
+
+    $where = $conditions !== []
+        ? ' WHERE ' . implode(' AND ', $conditions)
+        : '';
+
+    $rows = $this->rows(
+        "SELECT
+            h.*,
+            p.nombre AS nombre_centro,
+            p.estado AS estado_centro
+         FROM horarios_atencion AS h
+         INNER JOIN puntos_atencion AS p
+            ON p.id_punto = h.id_punto"
+        . $where
+        . " ORDER BY
+            p.nombre,
+            FIELD(
+                h.dia_semana,
+                'lunes',
+                'martes',
+                'miercoles',
+                'jueves',
+                'viernes',
+                'sabado',
+                'domingo'
+            )",
+        $parameters
+    );
+
+    $grouped = [];
+
+    foreach ($rows as $row) {
+        $grouped[
+            (int) $row['id_punto']
+        ][] = $row;
+    }
+
+    return $grouped;
+}
 
     /**
      * Guarda los siete días como una sola operación.

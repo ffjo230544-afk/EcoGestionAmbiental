@@ -32,117 +32,154 @@ final class CentroController extends Controller
     ];
 
     public function index(): void
-    {
-        $search = trim(
-            (string) ($_GET['buscar'] ?? '')
-        );
+{
+    $search = trim(
+        (string) ($_GET['buscar'] ?? '')
+    );
 
-        $type = (string) (
-            $_GET['tipo'] ?? ''
-        );
+    $type = (string) (
+        $_GET['tipo'] ?? ''
+    );
 
-        $status = (string) (
-            $_GET['estado'] ?? ''
-        );
+    $status = (string) (
+        $_GET['estado'] ?? ''
+    );
 
-        if (
-            !array_key_exists(
-                $type,
-                self::POINT_TYPES
-            )
-        ) {
-            $type = '';
-        }
-
-        if (
-            !in_array(
-                $status,
-                ['', 'activo', 'inactivo'],
-                true
-            )
-        ) {
-            $status = '';
-        }
-
-        /*
-         | El ciudadano únicamente puede consultar
-         | puntos de atención activos.
-         */
-        $onlyActive = has_role('ciudadano');
-
-        $centers = (new PuntoAtencion())->search(
-            $search,
+    if (
+        !array_key_exists(
             $type,
-            $status,
-            $onlyActive
-        );
-
-        $this->view(
-            'centers/index',
-            [
-                'pageTitle' => 'Centros de acopio',
-                'centers' => $centers,
-                'search' => $search,
-                'type' => $type,
-                'status' => $status,
-                'pointTypes' => self::POINT_TYPES,
-                'canManage' => has_role(
-                    'admin',
-                    'coordinador'
-                ),
-            ],
-            'app'
-        );
+            self::POINT_TYPES
+        )
+    ) {
+        $type = '';
     }
+
+    if (
+        !in_array(
+            $status,
+            ['', 'activo', 'inactivo'],
+            true
+        )
+    ) {
+        $status = '';
+    }
+
+    $onlyActive = has_role('ciudadano');
+
+    /*
+     | El administrador no tiene restricción.
+     | El coordinador recibe el centro de su sesión.
+     */
+    $restrictedPointId = has_role('coordinador')
+        ? auth_center_id()
+        : null;
+
+    /*
+     | Normalmente require_auth() ya habrá retirado
+     | una sesión de coordinador sin centro.
+     | Esta validación se mantiene como segunda capa.
+     */
+    if (
+        has_role('coordinador')
+        && $restrictedPointId === null
+    ) {
+        deny_access();
+    }
+
+    $centers = (new PuntoAtencion())->search(
+        $search,
+        $type,
+        $status,
+        $onlyActive,
+        $restrictedPointId
+    );
+
+    $this->view(
+        'centers/index',
+        [
+            'pageTitle' => 'Centros de acopio',
+            'centers' => $centers,
+            'search' => $search,
+            'type' => $type,
+            'status' => $status,
+            'pointTypes' => self::POINT_TYPES,
+
+            /*
+             | Puede editar y configurar materiales.
+             */
+            'canManage' => has_role(
+                'admin',
+                'coordinador'
+            ),
+
+            /*
+             | Solamente el administrador puede
+             | crear o cambiar estados.
+             */
+            'canCreate' => has_role('admin'),
+            'canChangeStatus' => has_role('admin'),
+        ],
+        'app'
+    );
+}
 
     public function show(): void
-    {
-        $id = max(
-            0,
-            (int) ($_GET['id'] ?? 0)
-        );
+{
+    $id = max(
+        0,
+        (int) ($_GET['id'] ?? 0)
+    );
 
-        $model = new PuntoAtencion();
+    $model = new PuntoAtencion();
 
-        $center = $model->find($id);
+    $center = $model->find($id);
 
-        if (
-            $center === null
-            || (
-                has_role('ciudadano')
-                && $center['estado'] !== 'activo'
-            )
-        ) {
-            $this->failure(
-                'No se encontró el centro solicitado.',
-                'centros'
-            );
-        }
-
-       $categories = $model->categories(
-    $id,
-    has_role('ciudadano')
-);
-        $schedules = $model->schedules($id);
-
-        $this->view(
-            'centers/show',
-            [
-                'pageTitle' => $center['nombre'],
-                'center' => $center,
-                'categories' => $categories,
-                'schedules' => $schedules,
-                'pointTypes' => self::POINT_TYPES,
-                'serviceTypes' => self::SERVICE_TYPES,
-                'days' => self::DAYS,
-                'canManage' => has_role(
-                    'admin',
-                    'coordinador'
-                ),
-            ],
-            'app'
+    if ($center === null) {
+        $this->failure(
+            'No se encontró el centro solicitado.',
+            'centros'
         );
     }
+
+    $canManage = can_manage_center($id);
+
+    /*
+     | Un centro inactivo solamente puede ser consultado
+     | por el administrador o por su responsable.
+     */
+    if (
+        $center['estado'] !== 'activo'
+        && !has_role('admin')
+        && !$canManage
+    ) {
+        $this->failure(
+            'No se encontró el centro solicitado.',
+            'centros'
+        );
+    }
+
+    $categories = $model->categories(
+        $id,
+        has_role('ciudadano')
+    );
+
+    $schedules = $model->schedules($id);
+
+    $this->view(
+        'centers/show',
+        [
+            'pageTitle' => $center['nombre'],
+            'center' => $center,
+            'categories' => $categories,
+            'schedules' => $schedules,
+            'pointTypes' => self::POINT_TYPES,
+            'serviceTypes' => self::SERVICE_TYPES,
+            'days' => self::DAYS,
+            'canManage' => $canManage,
+        ],
+        'app'
+    );
+}
 
 public function create(): void
 {
@@ -154,6 +191,7 @@ public function create(): void
             'record' => [],
             'pointTypes' => self::POINT_TYPES,
             'serviceTypes' => self::SERVICE_TYPES,
+            'canChangeStatus' => true,
         ],
         'app'
     );
@@ -210,6 +248,11 @@ public function edit(): void
         );
     }
 
+    /*
+     | Impide editar otro centro manipulando la URL.
+     */
+    require_center_management($id);
+
     $this->view(
         'centers/form',
         [
@@ -218,6 +261,7 @@ public function edit(): void
             'record' => $record,
             'pointTypes' => self::POINT_TYPES,
             'serviceTypes' => self::SERVICE_TYPES,
+            'canChangeStatus' => has_role('admin'),
         ],
         'app'
     );
@@ -232,14 +276,29 @@ public function update(): void
 
     $model = new PuntoAtencion();
 
-    if ($model->find($id) === null) {
+    $current = $model->find($id);
+
+    if ($current === null) {
         $this->failure(
             'No se encontró el centro solicitado.',
             'centros'
         );
     }
 
+    /*
+     | La validación se realiza nuevamente en el servidor.
+     */
+    require_center_management($id);
+
     $data = $this->validated(true, $id);
+
+    /*
+     | Aunque un coordinador manipule el formulario,
+     | no puede cambiar el estado del centro.
+     */
+    if (has_role('coordinador')) {
+        $data['estado'] = $current['estado'];
+    }
 
     if (
         $model->duplicateExists(
@@ -259,7 +318,10 @@ public function update(): void
 
     Security::audit(
         'centro_actualizado',
-        ['id_punto' => $id]
+        [
+            'id_punto' => $id,
+            'rol' => auth_role(),
+        ]
     );
 
     $this->success(
@@ -337,6 +399,7 @@ public function materials(): void
             'centros'
         );
     }
+    require_center_management($pointId);
 
     $categories = (new PuntoCategoria())
         ->configuration($pointId);
@@ -368,6 +431,8 @@ public function updateMaterials(): void
             'centros'
         );
     }
+    
+    require_center_management($pointId);
 
     $model = new PuntoCategoria();
 

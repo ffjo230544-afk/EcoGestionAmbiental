@@ -10,7 +10,7 @@
         </p>
     </div>
 
-    <?php if ($canManage): ?>
+    <?php if ($canCreate): ?>
     <a class="btn btn-eco" href="<?= e(url('centros/crear')) ?>">
         <i class="bi bi-plus-lg me-2"></i>
         Nuevo centro
@@ -54,7 +54,7 @@
                 </select>
             </div>
 
-            <?php if ($canManage): ?>
+            <?php if ($canChangeStatus): ?>
             <div class="col-md-4 col-lg-2">
                 <label for="estado" class="form-label">
                     Estado
@@ -149,48 +149,69 @@
                         Ver detalles
                     </a>
 
-                    <?php if ($canManage): ?>
-                    <a href="<?= e(
-                url(
-                    'centros/editar',
-                    ['id' => $center['id_punto']]
-                )
-            ) ?>" title="Editar" class="btn btn-eco-outline">
-                        <i class="bi bi-pencil"></i>
-                    </a>
+                   <?php if ($canManage): ?>
+    <a
+        href="<?= e(
+            url(
+                'centros/editar',
+                ['id' => $center['id_punto']]
+            )
+        ) ?>"
+        title="Editar"
+        class="btn btn-eco-outline"
+    >
+        <i class="bi bi-pencil"></i>
+    </a>
+<?php endif; ?>
 
-                    <?php
-        $activate = $center['estado'] !== 'activo';
+<?php if ($canChangeStatus): ?>
+    <?php
+    $activate = $center['estado'] !== 'activo';
 
-        $newStatus = $activate
-            ? 'activo'
-            : 'inactivo';
-        ?>
+    $newStatus = $activate
+        ? 'activo'
+        : 'inactivo';
+    ?>
 
-                    <form action="<?= e(
-                url('centros/cambiar-estado')
-            ) ?>" method="post" class="m-0" data-confirm="<?= e(
-                $activate
-                    ? '¿Deseas activar este centro?'
-                    : '¿Deseas desactivar este centro?'
-            ) ?>">
-                        <?= csrf_field() ?>
+    <form
+        action="<?= e(url('centros/cambiar-estado')) ?>"
+        method="post"
+        class="m-0"
+        data-confirm="<?= e(
+            $activate
+                ? '¿Deseas activar este centro?'
+                : '¿Deseas desactivar este centro?'
+        ) ?>"
+    >
+        <?= csrf_field() ?>
 
-                        <input type="hidden" name="id_punto" value="<?= (int) $center['id_punto'] ?>">
+        <input
+            type="hidden"
+            name="id_punto"
+            value="<?= (int) $center['id_punto'] ?>"
+        >
 
-                        <input type="hidden" name="estado" value="<?= e($newStatus) ?>">
+        <input
+            type="hidden"
+            name="estado"
+            value="<?= e($newStatus) ?>"
+        >
 
-                        <button type="submit" class="btn <?= $activate
-                    ? 'btn-outline-success' 
-                    : 'btn-outline-danger' ?>" title="<?= $activate
-                    ? 'Activar'
-                    : 'Desactivar' ?>">
-                            <i class="bi <?= $activate
-                    ? 'bi-check-circle'
-                    : 'bi-x-circle' ?>"></i>
-                        </button>
-                    </form>
-                    <?php endif; ?>
+        <button
+            type="submit"
+            class="btn <?= $activate
+                ? 'btn-outline-success'
+                : 'btn-outline-danger' ?>"
+            title="<?= $activate
+                ? 'Activar'
+                : 'Desactivar' ?>"
+        >
+            <i class="bi <?= $activate
+                ? 'bi-check-circle'
+                : 'bi-x-circle' ?>"></i>
+        </button>
+    </form>
+<?php endif; ?>
                 </div>
             </div>
         </article>

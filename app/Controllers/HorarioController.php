@@ -14,72 +14,93 @@ final class HorarioController extends Controller
     ];
 
     public function index(): void
-    {
-        $search = trim(
-            (string) ($_GET['buscar'] ?? '')
-        );
+{
+    $search = trim(
+        (string) ($_GET['buscar'] ?? '')
+    );
 
-        $onlyActive = has_role('ciudadano');
+    $onlyActive = has_role('ciudadano');
 
-        $conditions = [];
-        $parameters = [];
+    $restrictedPointId = has_role('coordinador')
+        ? auth_center_id()
+        : null;
 
-        if ($onlyActive) {
-            $conditions[] = 'p.estado = ?';
-            $parameters[] = 'activo';
-        }
-
-        if ($search !== '') {
-            $conditions[] = '(
-                p.nombre LIKE ?
-                OR p.municipio LIKE ?
-                OR p.direccion LIKE ?
-            )';
-
-            $term = '%' . $search . '%';
-
-            $parameters[] = $term;
-            $parameters[] = $term;
-            $parameters[] = $term;
-        }
-
-        $where = $conditions !== []
-            ? ' WHERE ' . implode(' AND ', $conditions)
-            : '';
-
-        $centers = (new PuntoAtencion())->rows(
-            'SELECT
-                p.id_punto,
-                p.nombre,
-                p.direccion,
-                p.municipio,
-                p.estado
-             FROM puntos_atencion AS p'
-            . $where
-            . ' ORDER BY p.nombre',
-            $parameters
-        );
-
-        $grouped = (new HorarioAtencion())->allGrouped(
-            $onlyActive
-        );
-
-        $this->view(
-            'schedules/index',
-            [
-                'pageTitle' => 'Horarios de atención',
-                'centers' => $centers,
-                'grouped' => $grouped,
-                'days' => self::DAYS,
-                'search' => $search,
-                'canManage' => has_role(
-                    'admin',
-                    'coordinador'
-                ),
-            ],
-            'app'
-        );
+    if (
+        has_role('coordinador')
+        && $restrictedPointId === null
+    ) {
+        deny_access();
     }
+
+    $conditions = [];
+    $parameters = [];
+
+    if ($onlyActive) {
+        $conditions[] = 'p.estado = ?';
+        $parameters[] = 'activo';
+    }
+
+    /*
+     | El coordinador solamente obtiene
+     | el centro asignado.
+     */
+    if ($restrictedPointId !== null) {
+        $conditions[] = 'p.id_punto = ?';
+        $parameters[] = $restrictedPointId;
+    }
+
+    if ($search !== '') {
+        $conditions[] = '(
+            p.nombre LIKE ?
+            OR p.municipio LIKE ?
+            OR p.direccion LIKE ?
+        )';
+
+        $term = '%' . $search . '%';
+
+        $parameters[] = $term;
+        $parameters[] = $term;
+        $parameters[] = $term;
+    }
+
+    $where = $conditions !== []
+        ? ' WHERE ' . implode(' AND ', $conditions)
+        : '';
+
+    $centers = (new PuntoAtencion())->rows(
+        'SELECT
+            p.id_punto,
+            p.nombre,
+            p.direccion,
+            p.municipio,
+            p.estado
+         FROM puntos_atencion AS p'
+        . $where
+        . ' ORDER BY p.nombre',
+        $parameters
+    );
+
+    $grouped = (new HorarioAtencion())->allGrouped(
+        $onlyActive,
+        $restrictedPointId
+    );
+
+    $this->view(
+        'schedules/index',
+        [
+            'pageTitle' => 'Horarios de atención',
+            'centers' => $centers,
+            'grouped' => $grouped,
+            'days' => self::DAYS,
+            'search' => $search,
+            'canManage' => has_role(
+                'admin',
+                'coordinador'
+            ),
+        ],
+        'app'
+    );
+}
 
     public function edit(): void
     {
@@ -96,6 +117,8 @@ final class HorarioController extends Controller
                 'horarios'
             );
         }
+
+        require_center_management($pointId);
 
         $stored = (new HorarioAtencion())->forCenter(
             $pointId
@@ -142,6 +165,8 @@ final class HorarioController extends Controller
                 'horarios'
             );
         }
+
+        require_center_management($pointId);
 
         $submitted = $_POST['horarios'] ?? [];
 

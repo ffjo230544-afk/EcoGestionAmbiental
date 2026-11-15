@@ -196,13 +196,27 @@ return [
         'ciudadano',
     ],
 ],
-    [
-        'section' => 'Educación ambiental',
-        'label' => 'Juegos y actividades',
-        'icon' => 'bi-controller',
-        'target' => 'modulo-actividades',
-        'roles' => ['admin', 'coordinador', 'ciudadano'],
+   [
+    'section' => 'Educación ambiental',
+    'label' => 'Juegos y actividades',
+    'icon' => 'bi-controller',
+    'route' => 'juegos',
+    'match' => [
+        'juegos',
+        'juegos/clasificar',
+        'juegos/trivia',
+        'juegos/memorama',
+        'juegos/limpia-parque',
+        'juegos/ruta-reciclaje',
+        'juegos/decisiones',
     ],
+    'target' => 'modulo-actividades',
+    'roles' => [
+        'admin',
+        'coordinador',
+        'ciudadano',
+    ],
+],
 
 
 

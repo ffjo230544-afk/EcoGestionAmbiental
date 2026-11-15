@@ -116,9 +116,14 @@ $router->get(
 );
 
 
-/*  CENTROS DE ACOPIO  */
+/* CENTROS DE ACOPIO */
 
-/* Consulta de centros para todos los usuarios autenticados. */
+$centerEditors = [
+    'admin',
+    'coordinador',
+];
+
+/* Consulta para todos los usuarios autenticados. */
 $router->get(
     'centros',
     'CentroController',
@@ -133,60 +138,60 @@ $router->get(
     $everyone
 );
 
-/* CREAR CENTROS SOLO PARA ADMIN Y COORDINADOR */
-
-$centerManagers = [
-    'admin',
-    'coordinador',
-];
-
+/* Creación exclusiva del administrador. */
 $router->get(
     'centros/crear',
     'CentroController',
     'create',
-    $centerManagers
+    ['admin']
 );
 
 $router->post(
     'centros/guardar',
     'CentroController',
     'store',
-    $centerManagers
+    ['admin']
 );
 
+/*
+ | El coordinador puede editar únicamente el suyo.
+ | El controlador comprueba el identificador.
+ */
 $router->get(
     'centros/editar',
     'CentroController',
     'edit',
-    $centerManagers
+    $centerEditors
 );
 
 $router->post(
     'centros/actualizar',
     'CentroController',
     'update',
-    $centerManagers
+    $centerEditors
 );
 
+/* Activación exclusiva del administrador. */
 $router->post(
     'centros/cambiar-estado',
     'CentroController',
     'changeStatus',
-    $centerManagers
+    ['admin']
 );
 
+/* Materiales del centro asignado. */
 $router->get(
     'centros/materiales',
     'CentroController',
     'materials',
-    $centerManagers
+    $centerEditors
 );
 
 $router->post(
     'centros/materiales/actualizar',
     'CentroController',
     'updateMaterials',
-    $centerManagers
+    $centerEditors
 );
 
 
@@ -194,11 +199,7 @@ $router->post(
 
 
 
-/*   CATEGORIAS  */
-$categoryManagers = [
-    'admin',
-    'coordinador',
-];
+/* CATEGORÍAS DE RESIDUOS */
 
 /* Consulta para todos los usuarios autenticados. */
 $router->get(
@@ -208,40 +209,40 @@ $router->get(
     $everyone
 );
 
-/* Gestión para administrador y coordinador. */
+/* Gestión global exclusiva del administrador. */
 $router->get(
     'categorias/crear',
     'CategoriaController',
     'create',
-    $categoryManagers
+    ['admin']
 );
 
 $router->post(
     'categorias/guardar',
     'CategoriaController',
     'store',
-    $categoryManagers
+    ['admin']
 );
 
 $router->get(
     'categorias/editar',
     'CategoriaController',
     'edit',
-    $categoryManagers
+    ['admin']
 );
 
 $router->post(
     'categorias/actualizar',
     'CategoriaController',
     'update',
-    $categoryManagers
+    ['admin']
 );
 
 $router->post(
     'categorias/cambiar-estado',
     'CategoriaController',
     'changeStatus',
-    $categoryManagers
+    ['admin']
 );
 
 
@@ -622,4 +623,68 @@ $router->post(
     'CotizacionController',
     'cancel',
     ['ciudadano']
+);
+
+
+
+
+/* ==========================================================
+   Juegos y actividades ambientales
+   ========================================================== */
+
+$router->get(
+    'juegos',
+    'JuegoController',
+    'index',
+    $everyone
+);
+
+$router->get(
+    'juegos/clasificar',
+    'JuegoController',
+    'classification',
+    $everyone
+);
+
+$router->get(
+    'juegos/trivia',
+    'JuegoController',
+    'trivia',
+    $everyone
+);
+
+$router->post(
+    'juegos/resultado',
+    'JuegoController',
+    'storeResult',
+    $everyone
+);
+
+
+$router->get(
+    'juegos/memorama',
+    'JuegoController',
+    'memory',
+    $everyone
+);
+
+$router->get(
+    'juegos/limpia-parque',
+    'JuegoController',
+    'cleanPark',
+    $everyone
+);
+
+$router->get(
+    'juegos/ruta-reciclaje',
+    'JuegoController',
+    'recyclingRoute',
+    $everyone
+);
+
+$router->get(
+    'juegos/decisiones',
+    'JuegoController',
+    'decisions',
+    $everyone
 );

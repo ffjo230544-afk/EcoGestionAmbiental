@@ -263,6 +263,20 @@ function auth_user(): ?array
 }
 
 /**
+ * Obtiene el centro asignado al coordinador actual.
+ */
+function auth_center_id(): ?int
+{
+    $centerId = (int) (
+        auth_user()['id_punto_asignado'] ?? 0
+    );
+
+    return $centerId > 0
+        ? $centerId
+        : null;
+}
+
+/**
  * Aquí obtengo el código del rol actual.
  */
 function auth_role(): ?string
@@ -281,6 +295,55 @@ function has_role(string ...$roles): bool
         true
     );
 }
+
+/**
+ * Comprueba si el usuario actual puede administrar
+ * un centro determinado.
+ */
+function can_manage_center(int $centerId): bool
+{
+    if ($centerId <= 0) {
+        return false;
+    }
+
+    /*
+     | El administrador puede gestionar
+     | cualquier centro.
+     */
+    if (has_role('admin')) {
+        return true;
+    }
+
+    /*
+     | El coordinador únicamente puede gestionar
+     | el centro guardado en su sesión.
+     */
+    return has_role('coordinador')
+        && auth_center_id() === $centerId;
+}
+
+/**
+ * Detiene la petición si el usuario intenta administrar
+ * un centro que no le corresponde.
+ */
+function require_center_management(int $centerId): void
+{
+    if (can_manage_center($centerId)) {
+        return;
+    }
+
+    Security::audit(
+        'acceso_centro_rechazado',
+        [
+            'id_punto_solicitado' => $centerId,
+            'id_punto_asignado' => auth_center_id(),
+        ]
+    );
+
+    deny_access();
+}
+
+
 
 /**
  * Aquí determino la pantalla principal correspondiente a cada rol.
@@ -373,42 +436,132 @@ function require_auth(): array
      | Esto permite retirar el acceso sin esperar a que cierre sesión.
      */
     $account = (new Usuario())->row(
-        'SELECT
-            u.id_rol,
-            u.estado,
-            r.nombre_rol,
-            r.estado AS estado_rol
-         FROM usuarios AS u
-         INNER JOIN roles AS r
-            ON r.id_rol = u.id_rol
-         WHERE u.id_usuario = ?
-         LIMIT 1',
-        [$user['id_usuario']]
+    'SELECT
+        u.id_rol,
+        u.id_punto_asignado,
+        u.estado,
+        r.nombre_rol,
+        r.estado AS estado_rol,
+        p.nombre AS nombre_punto_asignado,
+        p.estado AS estado_punto_asignado
+     FROM usuarios AS u
+     INNER JOIN roles AS r
+        ON r.id_rol = u.id_rol
+     LEFT JOIN puntos_atencion AS p
+        ON p.id_punto = u.id_punto_asignado
+     WHERE u.id_usuario = ?
+     LIMIT 1',
+    [$user['id_usuario']]
+);
+
+$roleCodes = [
+    'administrador' => 'admin',
+    'coordinador' => 'coordinador',
+    'ciudadano' => 'ciudadano',
+];
+
+$databaseRoleCode = $account !== null
+    ? (
+        $roleCodes[
+            strtolower(
+                (string) $account['nombre_rol']
+            )
+        ] ?? null
+    )
+    : null;
+
+$sessionIsInvalid =
+    $account === null
+    || $account['estado'] !== 'activo'
+    || $account['estado_rol'] !== 'activo'
+    || (int) $account['id_rol']
+        !== (int) $user['id_rol']
+    || $databaseRoleCode === null
+    || $databaseRoleCode
+        !== (string) $user['rol_codigo'];
+
+if ($sessionIsInvalid) {
+    Security::audit(
+        'sesion_revocada',
+        ['id_usuario' => $user['id_usuario']]
     );
 
-    if (
-        $account === null
-        || $account['estado'] !== 'activo'
-        || $account['estado_rol'] !== 'activo'
-        || (int) $account['id_rol']
-            !== (int) $user['id_rol']
-    ) {
-        Security::audit(
-            'sesion_revocada',
-            ['id_usuario' => $user['id_usuario']]
-        );
+    $_SESSION = [];
 
-        $_SESSION = [];
+    session_regenerate_id(true);
 
-        session_regenerate_id(true);
+    flash(
+        'error',
+        'La cuenta ya no está activa o sus permisos cambiaron.'
+    );
 
-        flash(
-            'error',
-            'La cuenta ya no está activa o sus permisos cambiaron.'
-        );
+    redirect('login');
+}
 
-        redirect('login');
-    }
+/*
+ | El coordinador solamente puede mantener
+ | la sesión si tiene un centro activo.
+ */
+if (
+    $databaseRoleCode === 'coordinador'
+    && (
+        (int) (
+            $account['id_punto_asignado'] ?? 0
+        ) <= 0
+        || (
+            $account['estado_punto_asignado']
+            ?? ''
+        ) !== 'activo'
+    )
+) {
+    Security::audit(
+        'sesion_revocada_sin_centro',
+        ['id_usuario' => $user['id_usuario']]
+    );
+
+    $_SESSION = [];
+
+    session_regenerate_id(true);
+
+    flash(
+        'error',
+        'Tu centro asignado ya no se encuentra activo.'
+    );
+
+    redirect('login');
+}
+
+/*
+ | Sincronizo el centro de la sesión con MySQL.
+ | Esto permite que una reasignación tenga efecto
+ | sin esperar a que el coordinador vuelva a entrar.
+ */
+$_SESSION['usuario']['id_punto_asignado'] =
+    $databaseRoleCode === 'coordinador'
+        ? (int) $account['id_punto_asignado']
+        : null;
+
+$_SESSION['usuario']['nombre_punto_asignado'] =
+    $databaseRoleCode === 'coordinador'
+        ? $account['nombre_punto_asignado']
+        : null;
+
+$_SESSION['usuario']['nombre_rol'] =
+    $account['nombre_rol'];
+
+$_SESSION['usuario']['rol_codigo'] =
+    $databaseRoleCode;
+
+
+
+
+    
+
+/*
+ | Actualizo la variable local para que el resto
+ | de esta misma petición ya utilice el centro nuevo.
+ */
+$user = $_SESSION['usuario'];
 
     /*
      | Actualizo la actividad en MySQL como máximo una vez por minuto.

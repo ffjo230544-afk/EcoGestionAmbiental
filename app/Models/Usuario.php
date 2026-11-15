@@ -9,6 +9,7 @@ final class Usuario extends Model
 
     protected array $fillable = [
         'id_rol',
+        'id_punto_asignado',
         'nombre_completo',
         'correo',
         'password_hash',
@@ -17,7 +18,8 @@ final class Usuario extends Model
     ];
 
     /**
-     * Método utilizado por el login.
+     * Obtiene una cuenta con su rol y centro.
+     * Es utilizado durante el inicio de sesión.
      */
     public function findByEmailWithRole(
         string $email
@@ -26,26 +28,37 @@ final class Usuario extends Model
             'SELECT
                 u.*,
                 r.nombre_rol,
-                r.estado AS estado_rol
+                r.estado AS estado_rol,
+                p.nombre AS nombre_punto_asignado,
+                p.estado AS estado_punto_asignado
              FROM usuarios AS u
              INNER JOIN roles AS r
                 ON r.id_rol = u.id_rol
+             LEFT JOIN puntos_atencion AS p
+                ON p.id_punto = u.id_punto_asignado
              WHERE u.correo = ?
              LIMIT 1',
             [$email]
         );
     }
 
+    /**
+     * Obtiene un usuario con su rol y centro asignado.
+     */
     public function findWithRole(int $id): ?array
     {
         return $this->row(
             'SELECT
                 u.*,
                 r.nombre_rol,
-                r.estado AS estado_rol
+                r.estado AS estado_rol,
+                p.nombre AS nombre_punto_asignado,
+                p.estado AS estado_punto_asignado
              FROM usuarios AS u
              INNER JOIN roles AS r
                 ON r.id_rol = u.id_rol
+             LEFT JOIN puntos_atencion AS p
+                ON p.id_punto = u.id_punto_asignado
              WHERE u.id_usuario = ?
              LIMIT 1',
             [$id]
@@ -86,23 +99,23 @@ final class Usuario extends Model
             $status
         );
 
-        /*
-         | LIMIT y OFFSET se convierten previamente a enteros.
-         | Por eso es seguro incorporarlos en esta parte del SQL.
-         */
         return $this->rows(
             'SELECT
                 u.id_usuario,
                 u.id_rol,
+                u.id_punto_asignado,
                 u.nombre_completo,
                 u.correo,
                 u.telefono,
                 u.estado,
                 u.fecha_registro,
-                r.nombre_rol
+                r.nombre_rol,
+                p.nombre AS nombre_punto_asignado
              FROM usuarios AS u
              INNER JOIN roles AS r
-                ON r.id_rol = u.id_rol'
+                ON r.id_rol = u.id_rol
+             LEFT JOIN puntos_atencion AS p
+                ON p.id_punto = u.id_punto_asignado'
             . $where
             . ' ORDER BY u.id_usuario DESC'
             . ' LIMIT ' . $limit

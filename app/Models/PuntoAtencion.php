@@ -24,77 +24,90 @@ final class PuntoAtencion extends Model
     ];
 
     public function search(
-        string $search,
-        string $type,
-        string $status,
-        bool $onlyActive
-    ): array {
-        $conditions = [];
-        $parameters = [];
+    string $search,
+    string $type,
+    string $status,
+    bool $onlyActive,
+    ?int $restrictedPointId = null
+): array {
+    $conditions = [];
+    $parameters = [];
 
-        if ($onlyActive) {
-            $conditions[] = 'p.estado = ?';
-            $parameters[] = 'activo';
-        } elseif (
-            in_array(
-                $status,
-                ['activo', 'inactivo'],
-                true
-            )
-        ) {
-            $conditions[] = 'p.estado = ?';
-            $parameters[] = $status;
-        }
-
-        if (
-            in_array(
-                $type,
-                [
-                    'empresa',
-                    'centro_acopio',
-                    'punto_servicio',
-                ],
-                true
-            )
-        ) {
-            $conditions[] = 'p.tipo_punto = ?';
-            $parameters[] = $type;
-        }
-
-        if ($search !== '') {
-            $conditions[] = '(
-                p.nombre LIKE ?
-                OR p.direccion LIKE ?
-                OR p.municipio LIKE ?
-                OR p.codigo_postal LIKE ?
-            )';
-
-            $term = '%' . $search . '%';
-
-            $parameters[] = $term;
-            $parameters[] = $term;
-            $parameters[] = $term;
-            $parameters[] = $term;
-        }
-
-        $where = $conditions !== []
-            ? ' WHERE ' . implode(' AND ', $conditions)
-            : '';
-
-        return $this->rows(
-            'SELECT
-                p.*,
-                (
-                    SELECT COUNT(*)
-                    FROM punto_categoria AS pc
-                    WHERE pc.id_punto = p.id_punto
-                ) AS total_categorias
-             FROM puntos_atencion AS p'
-            . $where
-            . ' ORDER BY p.nombre',
-            $parameters
-        );
+    if ($onlyActive) {
+        $conditions[] = 'p.estado = ?';
+        $parameters[] = 'activo';
+    } elseif (
+        in_array(
+            $status,
+            ['activo', 'inactivo'],
+            true
+        )
+    ) {
+        $conditions[] = 'p.estado = ?';
+        $parameters[] = $status;
     }
+
+    /*
+     | Cuando se recibe un centro restringido,
+     | la consulta no puede devolver otros centros.
+     */
+    if (
+        $restrictedPointId !== null
+        && $restrictedPointId > 0
+    ) {
+        $conditions[] = 'p.id_punto = ?';
+        $parameters[] = $restrictedPointId;
+    }
+
+    if (
+        in_array(
+            $type,
+            [
+                'empresa',
+                'centro_acopio',
+                'punto_servicio',
+            ],
+            true
+        )
+    ) {
+        $conditions[] = 'p.tipo_punto = ?';
+        $parameters[] = $type;
+    }
+
+    if ($search !== '') {
+        $conditions[] = '(
+            p.nombre LIKE ?
+            OR p.direccion LIKE ?
+            OR p.municipio LIKE ?
+            OR p.codigo_postal LIKE ?
+        )';
+
+        $term = '%' . $search . '%';
+
+        $parameters[] = $term;
+        $parameters[] = $term;
+        $parameters[] = $term;
+        $parameters[] = $term;
+    }
+
+    $where = $conditions !== []
+        ? ' WHERE ' . implode(' AND ', $conditions)
+        : '';
+
+    return $this->rows(
+        'SELECT
+            p.*,
+            (
+                SELECT COUNT(*)
+                FROM punto_categoria AS pc
+                WHERE pc.id_punto = p.id_punto
+            ) AS total_categorias
+         FROM puntos_atencion AS p'
+        . $where
+        . ' ORDER BY p.nombre',
+        $parameters
+    );
+}
 
     public function categories(
     int $pointId,
@@ -432,6 +445,27 @@ public function acceptsPurchase(
             'activo',
         ]
     ) > 0;
+}
+
+
+/**
+ * Obtiene los centros activos que pueden asignarse
+ * a una cuenta de coordinador.
+ */
+public function activeForAssignment(): array
+{
+    return $this->rows(
+        'SELECT
+            id_punto,
+            nombre,
+            tipo_punto,
+            municipio,
+            estado
+         FROM puntos_atencion
+         WHERE estado = ?
+         ORDER BY nombre',
+        ['activo']
+    );
 }
     
 }

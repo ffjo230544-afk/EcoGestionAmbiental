@@ -179,6 +179,65 @@ questionType?.addEventListener(
 
 updateQuestionOptions();
 
+/*
+ | Muestro el selector de centro solamente cuando
+ | el administrador selecciona el rol Coordinador.
+ */
+const userRoleField = document.querySelector(
+  "[data-user-role]"
+);
+
+const coordinatorCenterContainer =
+  document.querySelector(
+    "[data-coordinator-center]"
+  );
+
+const coordinatorCenterSelect =
+  document.querySelector(
+    "[data-coordinator-center-select]"
+  );
+
+const updateCoordinatorCenter = () => {
+  if (
+    !userRoleField ||
+    !coordinatorCenterContainer ||
+    !coordinatorCenterSelect
+  ) {
+    return;
+  }
+
+  const selectedOption =
+    userRoleField.options[
+      userRoleField.selectedIndex
+    ];
+
+  const isCoordinator =
+    selectedOption?.dataset.roleCode
+    === "coordinador";
+
+  coordinatorCenterContainer.classList.toggle(
+    "d-none",
+    !isCoordinator
+  );
+
+  coordinatorCenterSelect.disabled =
+    !isCoordinator;
+
+  coordinatorCenterSelect.required =
+    isCoordinator;
+
+  if (!isCoordinator) {
+    coordinatorCenterSelect.value = "";
+  }
+};
+
+userRoleField?.addEventListener(
+  "change",
+  updateCoordinatorCenter
+);
+
+updateCoordinatorCenter();
+
 
 
 

@@ -59,14 +59,13 @@ final class CategoriaController extends Controller
 
         $canManage = has_role(
             'admin',
-            'coordinador'
         );
 
         $categories = (new CategoriaResiduo())->search(
             $search,
             $type,
             $status,
-            has_role('ciudadano')
+            !has_role('admin')
         );
 
         $this->view(

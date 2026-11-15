@@ -80,18 +80,21 @@ final class UsuarioController extends Controller
     }
 
     public function create(): void
-    {
-        $this->view(
-            'users/form',
-            [
-                'pageTitle' => 'Registrar usuario',
-                'roles' => (new Rol())->active(),
-                'editing' => false,
-                'record' => [],
-            ],
-            'app'
-        );
-    }
+{
+    $this->view(
+        'users/form',
+        [
+            'pageTitle' => 'Registrar usuario',
+            'roles' => (new Rol())->active(),
+            'centers' => (
+                new PuntoAtencion()
+            )->activeForAssignment(),
+            'editing' => false,
+            'record' => [],
+        ],
+        'app'
+    );
+}
 
     public function store(): void
     {
@@ -114,13 +117,14 @@ final class UsuarioController extends Controller
         $userId = $model->create($data);
 
         Security::audit(
-            'usuario_creado',
-            [
-                'id_usuario_creado' => $userId,
-                'id_rol' => $data['id_rol'],
-            ]
-        );
-
+        'usuario_creado',
+        [
+            'id_usuario_creado' => $userId,
+            'id_rol' => $data['id_rol'],
+            'id_punto_asignado' =>
+                $data['id_punto_asignado'],
+        ]
+    );
         $this->success(
             'La cuenta se registró correctamente.',
             'usuarios'
@@ -146,16 +150,19 @@ final class UsuarioController extends Controller
         // El hash nunca se envía a la vista.
         unset($record['password_hash']);
 
-        $this->view(
-            'users/form',
-            [
-                'pageTitle' => 'Editar usuario',
-                'roles' => (new Rol())->active(),
-                'editing' => true,
-                'record' => $record,
-            ],
-            'app'
-        );
+       $this->view(
+    'users/form',
+    [
+        'pageTitle' => 'Editar usuario',
+        'roles' => (new Rol())->active(),
+        'centers' => (
+            new PuntoAtencion()
+        )->activeForAssignment(),
+        'editing' => true,
+        'record' => $record,
+    ],
+    'app'
+);
     }
 
     public function update(): void
@@ -275,12 +282,14 @@ final class UsuarioController extends Controller
             $_SESSION['usuario']['telefono']
                 = $data['telefono'];
         }
-
         Security::audit(
             'usuario_actualizado',
             [
                 'id_usuario_modificado' => $id,
-                'password_actualizada' => $passwordChanged,
+                'id_punto_asignado' =>
+                    $data['id_punto_asignado'],
+                'password_actualizada' =>
+                    $passwordChanged,
             ]
         );
 
@@ -422,6 +431,11 @@ final class UsuarioController extends Controller
             (int) ($_POST['id_rol'] ?? 0)
         );
 
+        $pointId = max(
+        0,
+        (int) ($_POST['id_punto_asignado'] ?? 0)
+        );
+
         $status = (string) (
             $_POST['estado'] ?? 'activo'
         );
@@ -489,6 +503,42 @@ final class UsuarioController extends Controller
                 $parameters
             );
         }
+       
+    $isCoordinator = strtolower(
+        (string) $role['nombre_rol']
+    ) === 'coordinador';
+
+    if ($isCoordinator) {
+        if ($pointId <= 0) {
+            $this->failure(
+                'Selecciona el centro que administrará el coordinador.',
+                $returnRoute,
+                $parameters
+            );
+        }
+
+        $point = (new PuntoAtencion())->find(
+            $pointId
+        );
+
+        if (
+            $point === null
+            || $point['estado'] !== 'activo'
+        ) {
+            $this->failure(
+                'El centro seleccionado no existe o no está activo.',
+                $returnRoute,
+                $parameters
+            );
+        }
+        } else {
+            /*
+            | Administradores y ciudadanos no tienen
+            | un centro asignado.
+            */
+            $pointId = 0;
+        }
+
 
         if (
             !in_array(
@@ -531,15 +581,23 @@ final class UsuarioController extends Controller
             }
         }
 
-        return [
-            'id_rol' => $roleId,
-            'nombre_completo' => $name,
-            'correo' => $email,
-            'telefono' => $phone !== ''
-                ? $phone
-                : null,
-            'estado' => $status,
-        ];
+      return [
+        'id_rol' => $roleId,
+
+        'id_punto_asignado' => $isCoordinator
+            ? $pointId
+            : null,
+
+        'nombre_completo' => $name,
+
+        'correo' => $email,
+
+        'telefono' => $phone !== ''
+            ? $phone
+            : null,
+
+        'estado' => $status,
+    ];
     }
 
     private function validPassword(

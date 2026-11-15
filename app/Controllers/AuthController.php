@@ -139,6 +139,36 @@ final class AuthController extends Controller
 
         $roleCode = $roleCodes[$roleName];
 
+        /*
+ | Una cuenta de coordinador necesita tener
+ | un centro existente y activo.
+ */
+if (
+    $roleCode === 'coordinador'
+    && (
+        (int) (
+            $user['id_punto_asignado'] ?? 0
+        ) <= 0
+        || (
+            $user['estado_punto_asignado']
+            ?? ''
+        ) !== 'activo'
+    )
+) {
+    Security::audit(
+        'coordinador_sin_centro_activo',
+        [
+            'id_usuario' =>
+                $user['id_usuario'],
+        ]
+    );
+
+    $this->failure(
+        'La cuenta no tiene un centro activo asignado. Comunícate con el administrador.',
+        'login'
+    );
+}
+
         // Elimino los intentos fallidos después de un acceso correcto.
         Security::clear($identity);
 
@@ -155,6 +185,15 @@ final class AuthController extends Controller
         $_SESSION['usuario'] = [
             'id_usuario' => (int) $user['id_usuario'],
             'id_rol' => (int) $user['id_rol'],
+            'id_punto_asignado' =>
+    $roleCode === 'coordinador'
+        ? (int) $user['id_punto_asignado']
+        : null,
+
+'nombre_punto_asignado' =>
+    $roleCode === 'coordinador'
+        ? $user['nombre_punto_asignado']
+        : null,
             'nombre_completo' => $user['nombre_completo'],
             'correo' => $user['correo'],
             'telefono' => $user['telefono'],

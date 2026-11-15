@@ -69,6 +69,11 @@ $navigation = menu_items();
     <?php endif; ?>
 
     <link rel="stylesheet" href="<?= e(asset('css/ecogestion.css')) ?>">
+
+    <?php if (!empty($useGames)): ?>
+    <link rel="stylesheet" href="<?= e(asset('css/games.css')) ?>">
+    <?php endif; ?>
+
 </head>
 
 <body>
@@ -110,7 +115,19 @@ $navigation = menu_items();
         ) ?>"></script>
     <?php endif; ?>
 
+    <?php if (!empty($useGames)): ?>
+    <script src="<?= e(asset('js/games.js')) ?>"></script>
+    <?php endif; ?>
+
     <script src="<?= e(asset('js/ecogestion.js')) ?>"></script>
+
+
+
+
+
+
+
+
 </body>
 
 </html>
