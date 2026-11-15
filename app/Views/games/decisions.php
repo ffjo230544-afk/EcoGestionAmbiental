@@ -14,8 +14,8 @@
         <div>
             <span class="section-label">EcoAventuras</span>
             <h1 class="page-title mt-1"><?= e($game['title']) ?></h1>
-            <p class="page-subtitle">
-                Recorre la EcoCasa y elige la acción con menor impacto ambiental.
+          <p class="page-subtitle">
+                <?= e($game['short_description']) ?>
             </p>
         </div>
 

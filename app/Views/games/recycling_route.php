@@ -10,13 +10,24 @@
         data-game-csrf
     >
 
+
+    <?php
+$totalStages = array_sum(
+    array_map(
+        static fn(array $route): int =>
+            count($route['stages']),
+        $routes
+    )
+);
+?>
+
     <div class="page-header game-page-header">
         <div>
             <span class="section-label">EcoAventuras</span>
             <h1 class="page-title mt-1"><?= e($game['title']) ?></h1>
-            <p class="page-subtitle">
-                Ordena cada proceso desde la separación hasta el nuevo producto.
-            </p>
+         <p class="page-subtitle">
+            <?= e($game['short_description']) ?>
+        </p>
         </div>
 
         <a class="btn btn-eco-outline" href="<?= e(url('juegos')) ?>">
@@ -42,13 +53,7 @@
             <i class="bi bi-list-ol"></i>
             <span>Etapas</span>
             <strong>
-                <?= array_sum(
-                    array_map(
-                        static fn(array $route): int =>
-                            count($route['stages']),
-                        $routes
-                    )
-                ) ?>
+                <?= (int) $totalStages ?>
             </strong>
         </div>
 
@@ -150,8 +155,14 @@
 
     <div class="game-actions-bar mt-4">
         <div>
-            <strong>¿Las tres rutas están ordenadas?</strong>
-            <span>PHP comprobará la posición de las quince etapas.</span>
+            <strong>
+                ¿Todas las rutas están ordenadas?
+            </strong>
+
+            <span>
+                PHP comprobará la posición de
+                <?= (int) $totalStages ?> etapas.
+            </span>
         </div>
 
         <button

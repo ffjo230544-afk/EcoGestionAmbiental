@@ -1549,6 +1549,27 @@ $objectTips = old(
 
 
 
+<?php if ($slug === 'ruta-reciclaje'): ?>
+    <?php require ROOT_PATH
+        . '/app/Views/games/edit_recycling_route.php'; ?>
+<?php endif; ?>
+
+<?php if ($slug === 'decisiones'): ?>
+    <?php require ROOT_PATH
+        . '/app/Views/games/edit_decisions.php'; ?>
+<?php endif; ?>
+
+
+
+
+
+
+
+
+
+
+
+
     <div class="game-editor-save">
         <div>
             <strong>Guardar cambios del juego</strong>

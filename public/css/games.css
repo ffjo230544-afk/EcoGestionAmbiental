@@ -3468,3 +3468,74 @@
 }
 
 
+/* =========================================================
+   Editor de rutas y decisiones
+   ========================================================= */
+
+.game-editor-route {
+    align-items: flex-start;
+}
+
+.game-editor-stages,
+.game-editor-decisions {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.game-editor-stage,
+.game-editor-decision {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #dce8df;
+    border-radius: 17px;
+    background: #ffffff;
+}
+
+.game-editor-stage-number,
+.game-editor-option-letter {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 13px;
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #16803c,
+        #2cab57
+    );
+    font-weight: 800;
+}
+
+.game-editor-decision:nth-child(1)
+.game-editor-option-letter {
+    background: #b45309;
+}
+
+.game-editor-decision:nth-child(2)
+.game-editor-option-letter {
+    background: #0e7490;
+}
+
+.game-editor-decision:nth-child(3)
+.game-editor-option-letter {
+    background: #16803c;
+}
+
+@media (max-width: 767.98px) {
+    .game-editor-stage,
+    .game-editor-decision {
+        display: grid;
+        grid-template-columns: 38px 1fr;
+    }
+
+    .game-editor-stage .row,
+    .game-editor-decision .row {
+        grid-column: 1 / -1;
+    }
+}
+
+

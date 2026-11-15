@@ -129,11 +129,13 @@
         $canManage
         && in_array(
             $game['slug'],
-            [
-            'clasifica',
-            'trivia',
-            'memorama',
-            'limpia-parque',
+           [
+                'clasifica',
+                'trivia',
+                'memorama',
+                'limpia-parque',
+                'ruta-reciclaje',
+                'decisiones',
             ],
             true
         )
@@ -171,9 +173,11 @@
         $game['slug'],
         [
         'clasifica',
-        'trivia',
-        'memorama',
-        'limpia-parque',
+            'trivia',
+            'memorama',
+            'limpia-parque',
+            'ruta-reciclaje',
+            'decisiones',
         ],
         true
     )

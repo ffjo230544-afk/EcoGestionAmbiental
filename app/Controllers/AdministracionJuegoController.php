@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 final class AdministracionJuegoController extends Controller
 {
-   private const EDITABLE_GAMES = [
+  private const EDITABLE_GAMES = [
     'clasifica',
     'trivia',
     'memorama',
     'limpia-parque',
+    'ruta-reciclaje',
+    'decisiones',
 ];
 
     /**
@@ -171,6 +173,22 @@ if ($slug === 'limpia-parque') {
         $this->cleanParkContent($slug)
     );
 }
+
+
+if ($slug === 'ruta-reciclaje') {
+    $content = array_merge(
+        $content,
+        $this->recyclingRouteContent($slug)
+    );
+}
+
+if ($slug === 'decisiones') {
+    $content = array_merge(
+        $content,
+        $this->decisionsContent($slug)
+    );
+}
+
 
 
 
@@ -860,6 +878,465 @@ private function cleanParkContent(string $slug): array
         'objects' => $objects,
     ];
 }
+
+
+
+
+
+/**
+ * Valido las rutas y las etapas del proceso de reciclaje.
+ */
+private function recyclingRouteContent(
+    string $slug
+): array {
+    $titles = $_POST['ruta_titulo'] ?? [];
+    $icons = $_POST['ruta_icono'] ?? [];
+    $colors = $_POST['ruta_color'] ?? [];
+    $descriptions = $_POST['ruta_descripcion'] ?? [];
+
+    if (
+        !is_array($titles)
+        || !is_array($icons)
+        || !is_array($colors)
+        || !is_array($descriptions)
+    ) {
+        $this->formFailure(
+            'Las rutas recibidas no son válidas.',
+            $slug
+        );
+    }
+
+    if (
+        count($titles) < 1
+        || count($titles) > 6
+    ) {
+        $this->formFailure(
+            'El juego debe tener entre 1 y 6 rutas.',
+            $slug
+        );
+    }
+
+    $allowedColors = [
+        'blue',
+        'cyan',
+        'amber',
+    ];
+
+    $routes = [];
+    $usedRoutes = [];
+    $usedStages = [];
+
+    foreach ($titles as $index => $rawTitle) {
+        $title = trim(
+            (string) $rawTitle
+        );
+
+        $icon = trim(
+            (string) (
+                $icons[$index]
+                ?? ''
+            )
+        );
+
+        $color = trim(
+            (string) (
+                $colors[$index]
+                ?? ''
+            )
+        );
+
+        $description = trim(
+            (string) (
+                $descriptions[$index]
+                ?? ''
+            )
+        );
+
+        if (
+            $this->textLength($title) < 3
+            || $this->textLength($title) > 100
+        ) {
+            $this->formFailure(
+                'El título de cada ruta debe contener entre 3 y 100 caracteres.',
+                $slug
+            );
+        }
+
+        if (
+            preg_match(
+                '/^bi-[a-z0-9-]+$/',
+                $icon
+            ) !== 1
+        ) {
+            $this->formFailure(
+                'Selecciona un icono válido para cada ruta.',
+                $slug
+            );
+        }
+
+        if (!in_array($color, $allowedColors, true)) {
+            $this->formFailure(
+                'Selecciona un color válido para cada ruta.',
+                $slug
+            );
+        }
+
+        if (
+            $this->textLength($description) < 10
+            || $this->textLength($description) > 250
+        ) {
+            $this->formFailure(
+                'La descripción de cada ruta debe contener entre 10 y 250 caracteres.',
+                $slug
+            );
+        }
+
+        $routeIdentifier = $this->uniqueIdentifier(
+            $title,
+            'ruta',
+            $usedRoutes
+        );
+
+        $usedRoutes[$routeIdentifier] = true;
+        $stages = [];
+
+        /*
+         | Cada ruta conserva cinco etapas para mantener
+         | una dinámica consistente en el juego.
+         */
+        for ($stageNumber = 1; $stageNumber <= 5; $stageNumber++) {
+            $stageTitles = $_POST[
+                'etapa_' . $stageNumber . '_titulo'
+            ] ?? [];
+
+            $stageDescriptions = $_POST[
+                'etapa_' . $stageNumber . '_descripcion'
+            ] ?? [];
+
+            $stageEmojis = $_POST[
+                'etapa_' . $stageNumber . '_emoji'
+            ] ?? [];
+
+            if (
+                !is_array($stageTitles)
+                || !is_array($stageDescriptions)
+                || !is_array($stageEmojis)
+            ) {
+                $this->formFailure(
+                    'Las etapas recibidas no son válidas.',
+                    $slug
+                );
+            }
+
+            $stageTitle = trim(
+                (string) (
+                    $stageTitles[$index]
+                    ?? ''
+                )
+            );
+
+            $stageDescription = trim(
+                (string) (
+                    $stageDescriptions[$index]
+                    ?? ''
+                )
+            );
+
+            $stageEmoji = trim(
+                (string) (
+                    $stageEmojis[$index]
+                    ?? ''
+                )
+            );
+
+            if (
+                $this->textLength($stageTitle) < 2
+                || $this->textLength($stageTitle) > 100
+            ) {
+                $this->formFailure(
+                    'El título de cada etapa debe contener entre 2 y 100 caracteres.',
+                    $slug
+                );
+            }
+
+            if (
+                $this->textLength($stageDescription) < 5
+                || $this->textLength($stageDescription) > 250
+            ) {
+                $this->formFailure(
+                    'La descripción de cada etapa debe contener entre 5 y 250 caracteres.',
+                    $slug
+                );
+            }
+
+            if (
+                $stageEmoji === ''
+                || $this->textLength($stageEmoji) > 12
+            ) {
+                $this->formFailure(
+                    'Cada etapa debe tener un emoji válido.',
+                    $slug
+                );
+            }
+
+            $stageIdentifier = $this->uniqueIdentifier(
+                $routeIdentifier
+                . '_'
+                . $stageTitle,
+                'etapa',
+                $usedStages
+            );
+
+            $usedStages[$stageIdentifier] = true;
+
+            $stages[] = [
+                'id' => $stageIdentifier,
+                'title' => $stageTitle,
+                'description' => $stageDescription,
+                'emoji' => $stageEmoji,
+            ];
+        }
+
+        $routes[] = [
+            'id' => $routeIdentifier,
+            'title' => $title,
+            'icon' => $icon,
+            'color' => $color,
+            'description' => $description,
+            'stages' => $stages,
+        ];
+    }
+
+    return [
+        'routes' => $routes,
+    ];
+}
+
+
+
+
+/**
+ * Valido las situaciones y opciones de EcoDecisiones.
+ */
+private function decisionsContent(
+    string $slug
+): array {
+    $rooms = $_POST['escenario_habitacion'] ?? [];
+    $icons = $_POST['escenario_icono'] ?? [];
+    $questions = $_POST['escenario_pregunta'] ?? [];
+
+    if (
+        !is_array($rooms)
+        || !is_array($icons)
+        || !is_array($questions)
+    ) {
+        $this->formFailure(
+            'Las situaciones recibidas no son válidas.',
+            $slug
+        );
+    }
+
+    if (
+        count($rooms) < 3
+        || count($rooms) > 20
+    ) {
+        $this->formFailure(
+            'EcoDecisiones debe tener entre 3 y 20 situaciones.',
+            $slug
+        );
+    }
+
+    $scenarios = [];
+    $usedScenarios = [];
+
+    foreach ($questions as $index => $rawQuestion) {
+        $room = trim(
+            (string) (
+                $rooms[$index]
+                ?? ''
+            )
+        );
+
+        $icon = trim(
+            (string) (
+                $icons[$index]
+                ?? ''
+            )
+        );
+
+        $question = trim(
+            (string) $rawQuestion
+        );
+
+        if (
+            $this->textLength($room) < 2
+            || $this->textLength($room) > 60
+        ) {
+            $this->formFailure(
+                'La ubicación de cada situación debe contener entre 2 y 60 caracteres.',
+                $slug
+            );
+        }
+
+        if (
+            preg_match(
+                '/^bi-[a-z0-9-]+$/',
+                $icon
+            ) !== 1
+        ) {
+            $this->formFailure(
+                'Selecciona un icono válido para cada situación.',
+                $slug
+            );
+        }
+
+        if (
+            $this->textLength($question) < 10
+            || $this->textLength($question) > 220
+        ) {
+            $this->formFailure(
+                'Cada situación debe contener entre 10 y 220 caracteres.',
+                $slug
+            );
+        }
+
+        $scenarioIdentifier = $this->uniqueIdentifier(
+            $room . '_' . $question,
+            'situacion',
+            $usedScenarios
+        );
+
+        $usedScenarios[$scenarioIdentifier] = true;
+        $options = [];
+        $usedOptions = [];
+        $impacts = [];
+
+        foreach (['a', 'b', 'c'] as $letter) {
+            $labels = $_POST[
+                'decision_' . $letter . '_etiqueta'
+            ] ?? [];
+
+            $submittedImpacts = $_POST[
+                'decision_' . $letter . '_impacto'
+            ] ?? [];
+
+            $feedbackItems = $_POST[
+                'decision_' . $letter . '_retroalimentacion'
+            ] ?? [];
+
+            if (
+                !is_array($labels)
+                || !is_array($submittedImpacts)
+                || !is_array($feedbackItems)
+            ) {
+                $this->formFailure(
+                    'Las opciones de decisión no son válidas.',
+                    $slug
+                );
+            }
+
+            $label = trim(
+                (string) (
+                    $labels[$index]
+                    ?? ''
+                )
+            );
+
+            $rawImpact = $submittedImpacts[$index]
+                ?? '';
+
+            $feedback = trim(
+                (string) (
+                    $feedbackItems[$index]
+                    ?? ''
+                )
+            );
+
+            $impact = filter_var(
+                $rawImpact,
+                FILTER_VALIDATE_INT
+            );
+
+            if (
+                $this->textLength($label) < 2
+                || $this->textLength($label) > 180
+            ) {
+                $this->formFailure(
+                    'Cada decisión debe contener entre 2 y 180 caracteres.',
+                    $slug
+                );
+            }
+
+            if (
+                $impact === false
+                || !in_array(
+                    $impact,
+                    [0, 1, 2],
+                    true
+                )
+            ) {
+                $this->formFailure(
+                    'El impacto debe ser 0, 1 o 2.',
+                    $slug
+                );
+            }
+
+            if (
+                $this->textLength($feedback) < 10
+                || $this->textLength($feedback) > 350
+            ) {
+                $this->formFailure(
+                    'Cada retroalimentación debe contener entre 10 y 350 caracteres.',
+                    $slug
+                );
+            }
+
+            $optionIdentifier = $this->uniqueIdentifier(
+                $label,
+                'opcion_' . $letter,
+                $usedOptions
+            );
+
+            $usedOptions[$optionIdentifier] = true;
+            $impacts[] = (int) $impact;
+
+            $options[] = [
+                'id' => $optionIdentifier,
+                'label' => $label,
+                'impact' => (int) $impact,
+                'feedback' => $feedback,
+            ];
+        }
+
+        /*
+         | Exijo un impacto negativo, uno intermedio
+         | y uno positivo en cada situación.
+         */
+        $orderedImpacts = $impacts;
+        sort($orderedImpacts);
+
+        if ($orderedImpacts !== [0, 1, 2]) {
+            $this->formFailure(
+                'Cada situación debe tener una opción de impacto bajo, una intermedia y una positiva.',
+                $slug
+            );
+        }
+
+        $scenarios[] = [
+            'id' => $scenarioIdentifier,
+            'room' => $room,
+            'icon' => $icon,
+            'question' => $question,
+            'options' => $options,
+        ];
+    }
+
+    return [
+        'scenarios' => $scenarios,
+    ];
+}
+
+
 
 
 
