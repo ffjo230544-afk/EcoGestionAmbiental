@@ -9,7 +9,7 @@ return [
     'app_name' => 'EcoGestión Ambiental',
     'app_url' => '',   //cuando publique, aquí pondré la URL real del sistema
     'timezone' => 'America/Mexico_City',
-    'debug' => true,
+    'debug' => false,
 
     /*
      | Aquí configuro la duración de las sesiones.
@@ -21,7 +21,7 @@ return [
      | Aquí indico si mostraré las cuentas demostrativas.
      | Antes de publicar cambiaré este valor a false.
      */
-    'show_demo_credentials' => true,
+    'show_demo_credentials' => false,
 
     /*
      | Aquí configuro los datos de conexión con MySQL.
