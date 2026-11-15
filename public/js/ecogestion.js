@@ -58,18 +58,104 @@
   });
 
   /*
- | Solicito confirmación antes de ejecutar
- | acciones sensibles como desactivar una cuenta.
+ * Aquí utilizo un modal con el diseño del sistema
+ * para confirmar las operaciones sensibles.
  */
-  document.querySelectorAll("[data-confirm]").forEach((form) => {
-    form.addEventListener("submit", (event) => {
-      const message = form.dataset.confirm || "¿Deseas continuar?";
+const confirmationModal = document.querySelector(
+  "[data-confirm-modal]"
+);
 
-      if (!window.confirm(message)) {
-        event.preventDefault();
-      }
-    });
+const confirmationMessage = document.querySelector(
+  "[data-confirm-message]"
+);
+
+const confirmationButton = document.querySelector(
+  "[data-confirm-accept]"
+);
+
+let pendingForm = null;
+let confirmedForm = null;
+
+const modalInstance =
+  confirmationModal && window.bootstrap
+    ? new bootstrap.Modal(confirmationModal)
+    : null;
+
+/*
+ * Intercepto los formularios que necesiten
+ * una confirmación antes de enviarse.
+ */
+document.querySelectorAll("form[data-confirm]").forEach((form) => {
+  form.addEventListener("submit", (event) => {
+    /*
+     * Si el formulario ya fue confirmado,
+     * permito que continúe su envío.
+     */
+    if (confirmedForm === form) {
+      confirmedForm = null;
+      return;
+    }
+
+    event.preventDefault();
+
+    pendingForm = form;
+
+    const message =
+      form.dataset.confirm
+      || "¿Deseas continuar con esta operación?";
+
+    if (confirmationMessage) {
+      confirmationMessage.textContent = message;
+    }
+
+    /*
+     * Si el modal está disponible, lo muestro.
+     */
+    if (modalInstance) {
+      modalInstance.show();
+      return;
+    }
+
+    /*
+     * Mantengo una confirmación de respaldo
+     * si Bootstrap no se pudo cargar.
+     */
+    if (window.confirm(message)) {
+      confirmedForm = form;
+      form.requestSubmit();
+    }
   });
+});
+
+/*
+ * Al confirmar la operación, vuelvo a enviar
+ * únicamente el formulario seleccionado.
+ */
+confirmationButton?.addEventListener("click", () => {
+  if (!pendingForm) {
+    return;
+  }
+
+  const form = pendingForm;
+
+  pendingForm = null;
+  confirmedForm = form;
+
+  modalInstance?.hide();
+
+  form.requestSubmit();
+});
+
+/*
+ * Al cerrar o cancelar el modal elimino
+ * la operación que estaba pendiente.
+ */
+confirmationModal?.addEventListener(
+  "hidden.bs.modal",
+  () => {
+    pendingForm = null;
+  }
+);
 
 
 /*

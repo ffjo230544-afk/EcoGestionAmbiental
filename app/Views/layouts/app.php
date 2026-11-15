@@ -102,6 +102,78 @@ $navigation = menu_items();
         </div>
     </div>
 
+
+    <!--
+        Aquí muestro una confirmación con el diseño del sistema
+        antes de ejecutar una operación sensible.
+    -->
+    <div
+        class="modal fade"
+        id="confirmationModal"
+        tabindex="-1"
+        aria-labelledby="confirmationModalTitle"
+        aria-describedby="confirmationModalMessage"
+        aria-hidden="true"
+        data-confirm-modal
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content eco-card">
+
+                <div class="modal-body p-4 text-center">
+
+                    <div
+                        class="metric-icon mx-auto mb-3
+                               text-danger bg-danger-subtle"
+                    >
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+
+                    <h2
+                        class="h5 fw-bold"
+                        id="confirmationModalTitle"
+                    >
+                        Confirmar operación
+                    </h2>
+
+                    <p
+                        class="text-muted-eco mb-4"
+                        id="confirmationModalMessage"
+                        data-confirm-message
+                    >
+                        ¿Deseas continuar con esta operación?
+                    </p>
+
+                    <div
+                        class="d-flex justify-content-center
+                               flex-wrap gap-2"
+                    >
+                        <button
+                            type="button"
+                            class="btn btn-light-eco"
+                            data-bs-dismiss="modal"
+                        >
+                            <i class="bi bi-x-lg me-2"></i>
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-confirm-accept
+                        >
+                            <i class="bi bi-check-lg me-2"></i>
+                            Sí, continuar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <?php if (!empty($useLeaflet)): ?>
